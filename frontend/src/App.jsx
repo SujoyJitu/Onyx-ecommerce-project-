@@ -1,122 +1,92 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import './App.css';
+
+const links = ['Home', 'Shop', 'Categories', 'Become a Seller'];
+const slides = [
+  { image: '/Photos/banner%20image%201.jpg', kicker: 'THE ONYX EDIT', heading: 'Elegance in every detail.', description: 'Discover considered design, timeless pieces, and a more elevated way to shop.' },
+  { image: '/Photos/banner%20image%202.jpg', kicker: 'GIFT BEAUTIFULLY', heading: 'Timeless luxury, thoughtfully chosen.', description: 'Find a memorable gift for every occasion, wrapped in the art of giving.' },
+  { image: '/Photos/banner%20image%203.jpg', kicker: 'A NEW CLASSIC', heading: 'Make everyday feel exceptional.', description: 'Explore a curated collection made for lasting style and everyday moments.' },
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [signedIn] = useState(false); // Demo state until login is connected.
+  const cartCount = 0; // Connect this to the cart when shopping is implemented.
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  // Move to the next banner every six seconds.
+  useEffect(() => {
+    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 6000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const changeSlide = (direction) => setActiveSlide((current) => (current + direction + slides.length) % slides.length);
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      <header className="site-header">
+        <nav className="navbar" aria-label="Main navigation">
+          <a className="brand" href="#home" aria-label="Onyx home">
+            <img src="/Photos/logo.jpg" alt="ONYX — Elevated E-commerce" />
+          </a>
 
-      <div className="ticks"></div>
+          <form className="search" role="search" onSubmit={(event) => event.preventDefault()}>
+            <input type="search" placeholder="Search products..." aria-label="Search products" />
+            <button type="submit" aria-label="Search">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
+            </button>
+          </form>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
+          <div className={`nav-content${menuOpen ? ' is-open' : ''}`}>
+            <div className="nav-links">
+              {links.map((link) => <a href={`#${link.toLowerCase().replaceAll(' ', '-')}`} key={link}>{link}</a>)}
+            </div>
+            <div className="nav-actions">
+              <a className="cart-link" href="#cart" aria-label={`Cart, ${cartCount} items`}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+                <span>Cart</span><b className="cart-count">{cartCount}</b>
               </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+              {signedIn ? (
+                <div className="user-wrap">
+                  <button className="user-button" onClick={() => setUserOpen(!userOpen)}>Account <span>⌄</span></button>
+                  {userOpen && <div className="user-menu"><a href="#profile">Profile</a><a href="#orders">Orders</a><button onClick={() => setUserOpen(false)}>Logout</button></div>}
+                </div>
+              ) : <a className="auth-button" href="#login">Login / Sign Up</a>}
+            </div>
+          </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+          <button className="menu-toggle" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
+            <span /><span /><span />
+          </button>
+        </nav>
+      </header>
+      <main>
+        <section className="hero" aria-label="Featured collections">
+          {slides.map((slide, index) => (
+            <article className={`hero-slide${index === activeSlide ? ' is-active' : ''}`} key={slide.image} aria-hidden={index !== activeSlide}>
+              <img className="hero-image" src={slide.image} alt="" />
+              <div className="hero-shade" />
+              <div className="hero-copy">
+                <span className="hero-kicker">{slide.kicker}</span>
+                <h1>{slide.heading}</h1>
+                <p>{slide.description}</p>
+                <div className="hero-buttons">
+                  <a className="hero-button hero-button-primary" href="#shop">Shop Now <span aria-hidden="true">→</span></a>
+                  <a className="hero-button hero-button-outline" href="#become-a-seller">Start Selling</a>
+                </div>
+              </div>
+            </article>
+          ))}
+          <button className="hero-arrow hero-arrow-prev" aria-label="Previous banner" onClick={() => changeSlide(-1)}>‹</button>
+          <button className="hero-arrow hero-arrow-next" aria-label="Next banner" onClick={() => changeSlide(1)}>›</button>
+          <div className="hero-dots" aria-label="Choose banner">
+            {slides.map((slide, index) => <button key={slide.image} aria-label={`Show banner ${index + 1}`} aria-current={index === activeSlide} onClick={() => setActiveSlide(index)} />)}
+          </div>
+        </section>
+      </main>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
