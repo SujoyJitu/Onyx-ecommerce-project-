@@ -27,7 +27,7 @@ All routes use JSON request and response bodies.
 
 ## Catalog models and vendor product routes
 
-`Shop`, `Category`, and `Product` are Mongoose models. Seed/create categories in MongoDB before vendors create products; each product references an existing category. A product's `vendor` is set from the authenticated user and cannot be supplied or changed by the request.
+`Shop`, `Category`, and `Product` are Mongoose models. Run `npm run seed:categories` from `backend` to add the starter category list (existing categories are left unchanged); each product references an existing category. The frontend loads these through `GET /api/categories`. A product's `vendor` is set from the authenticated user and cannot be supplied or changed by the request.
 
 | Method | Path | Behavior |
 | --- | --- | --- |
@@ -37,6 +37,8 @@ All routes use JSON request and response bodies.
 | DELETE | `/api/products/:id` | Vendor-only. Deletes only an owned product and cleans up its Cloudinary images. |
 
 Product writes require a verified vendor JWT in `Authorization: Bearer <token>`. The routes accept only the `vendor` role; administrators cannot create or edit products as vendors.
+
+Vendor shop onboarding uses `GET /api/shops/my` to check for an existing shop and `POST /api/shops` to create one. New shops begin with `pending` status. The logo upload field is `logo` and uses the same image type/size limits as product uploads.
 
 Registration requires `name`, `email`, `phone`, and an eight-character minimum password. Passwords are hashed using bcrypt before they are saved. New accounts must verify their email before password sign-in. Verification tokens expire in 24 hours; reset links expire in 15 minutes. Recovery and sign-in routes have per-IP rate limits. Auth middleware exports `authenticate`, `isVendor` (vendor or admin), and `isAdmin` for protecting application routes.
 

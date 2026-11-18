@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import MainLayout from './MainLayout.jsx';
 import NotFound from './NotFound.jsx';
 import SignUp from './pages/SignUp.jsx';
@@ -8,6 +8,13 @@ import Account from './pages/Account.jsx';
 import VerifyEmail from './pages/VerifyEmail.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+import SellerRegistration from './pages/SellerRegistration.jsx';
+import SellerShopForm from './pages/SellerShopForm.jsx';
+import SellerOverview from './pages/SellerOverview.jsx';
+import ProductForm from './pages/ProductForm.jsx';
+import MyProducts from './pages/MyProducts.jsx';
+import VendorDashboardLayout from './components/VendorDashboardLayout.jsx';
+import VendorOnlyRoute from './components/VendorOnlyRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import './App.css';
 
@@ -59,7 +66,7 @@ function HomePage() {
                 <p>{slide.description}</p>
                 <div className="hero-buttons">
                   <a className="hero-button hero-button-primary" href="#shop">Shop Now <span aria-hidden="true">→</span></a>
-                  <a className="hero-button hero-button-outline" href="#become-a-seller">Start Selling</a>
+                  <Link className="hero-button hero-button-outline" to="/seller/register">Start Selling</Link>
                 </div>
               </div>
             </article>
@@ -86,7 +93,7 @@ function HomePage() {
 
         <section className="benefits-band"><div className="benefit"><span className="benefit-icon">↗</span><div><h3>Delivery, made simple</h3><p>Clear delivery options at checkout.</p></div></div><div className="benefit"><span className="benefit-icon">◇</span><div><h3>Checkout with confidence</h3><p>Secure payment for every order.</p></div></div><div className="benefit"><span className="benefit-icon">↺</span><div><h3>A little peace of mind</h3><p>Easy returns on eligible purchases.</p></div></div></section>
 
-        <section className="seller-banner" id="become-a-seller"><div><span className="eyebrow">YOUR SHOP, YOUR STORY</span><h2>Good things deserve<br />to be discovered.</h2><p>Bring your independent brand to a marketplace that values thoughtful goods and the people who make them.</p></div><a className="hero-button hero-button-primary" href="#seller">Become a seller <span>→</span></a><span className="seller-ornament" aria-hidden="true">O</span></section>
+        <section className="seller-banner" id="become-a-seller"><div><span className="eyebrow">YOUR SHOP, YOUR STORY</span><h2>Good things deserve<br />to be discovered.</h2><p>Bring your independent brand to a marketplace that values thoughtful goods and the people who make them.</p></div><Link className="hero-button hero-button-primary" to="/seller/register">Become a seller <span>→</span></Link><span className="seller-ornament" aria-hidden="true">O</span></section>
 
         <section className="testimonial-section"><span className="eyebrow">KIND WORDS</span><div className="quote-mark">“</div><blockquote>“Beautifully curated, lovely quality, and the whole experience felt considered from start to finish.”</blockquote><div className="reviewer"><span className="reviewer-avatar">AM</span><span><strong>Alex Morgan</strong><small>ONYX customer · Verified purchase</small></span></div><div className="review-stars" aria-label="5 out of 5 stars">★★★★★</div></section>
 
@@ -108,6 +115,16 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/seller/register" element={<SellerRegistration />} />
+        <Route element={<ProtectedRoute><VendorOnlyRoute /></ProtectedRoute>}>
+          <Route path="/seller/dashboard" element={<VendorDashboardLayout />}>
+            <Route index element={<SellerOverview />} />
+            <Route path="shop" element={<SellerShopForm />} />
+            <Route path="products/new" element={<ProductForm />} />
+            <Route path="products" element={<MyProducts />} />
+            <Route path="products/:productId/edit" element={<ProductForm />} />
+          </Route>
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

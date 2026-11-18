@@ -5,6 +5,8 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
+const shopRoutes = require('./routes/shops');
+const categoryRoutes = require('./routes/categories');
 
 // Create the Express application.
 const app = express();
@@ -14,6 +16,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/shops', shopRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Let clients check whether the backend is running.
 app.get('/api/health', (req, res) => {

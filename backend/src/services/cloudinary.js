@@ -19,10 +19,10 @@ function requireCloudinary() {
   }
 }
 
-function uploadImageBuffer(buffer) {
+function uploadImageBuffer(buffer, { folder = 'onyx/products' } = {}) {
   requireCloudinary();
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream({ folder: 'onyx/products', resource_type: 'image' }, (error, result) => {
+    const stream = cloudinary.uploader.upload_stream({ folder, resource_type: 'image' }, (error, result) => {
       if (error) {
         const uploadError = new Error('Cloudinary could not upload the image.');
         uploadError.statusCode = 502;

@@ -13,6 +13,7 @@ export default function VerifyEmail() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [accountPath, setAccountPath] = useState(location.state?.role === 'vendor' ? '/seller/dashboard/shop' : '/account');
   const [developmentVerificationUrl, setDevelopmentVerificationUrl] = useState(location.state?.developmentVerificationUrl || '');
 
   const verify = async () => {
@@ -20,7 +21,8 @@ export default function VerifyEmail() {
     setError('');
     setMessage('');
     try {
-      await verifyEmail(token);
+      const user = await verifyEmail(token);
+      setAccountPath(user.role === 'vendor' ? '/seller/dashboard/shop' : '/account');
       setVerified(true);
       setMessage('Your email is verified. You are now signed in.');
     } catch (requestError) {
@@ -60,7 +62,7 @@ export default function VerifyEmail() {
         <input id="verify-email-address" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         <button className="auth-secondary-submit" type="submit" disabled={isSubmitting}>Resend verification email</button>
       </form>}
-      {verified ? <Link className="dark-button verify-account-link" to="/account">Continue to account <span aria-hidden="true">→</span></Link> : <p className="auth-switch"><Link to="/signin">Back to sign in</Link></p>}
+      {verified ? <Link className="dark-button verify-account-link" to={accountPath}>{accountPath.includes('seller') ? 'Set up your shop' : 'Continue to account'} <span aria-hidden="true">→</span></Link> : <p className="auth-switch"><Link to="/signin">Back to sign in</Link></p>}
     </section></main>
   );
 }

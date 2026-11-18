@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/useAuth.js';
 
 export default function SignUp() {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: 'customer' });
+  const [searchParams] = useSearchParams();
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: searchParams.get('role') === 'vendor' ? 'vendor' : 'customer' });
   const [errors, setErrors] = useState([]);
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +30,7 @@ export default function SignUp() {
     setIsSubmitting(true);
     try {
       const result = await register({ ...form, name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() });
-      navigate(`/verify-email?email=${encodeURIComponent(form.email.trim())}`, { replace: true, state: { message: result.message || 'Your account is created. Verify your email to finish signing up.', developmentVerificationUrl: result.developmentVerificationUrl } });
+      navigate(`/verify-email?email=${encodeURIComponent(form.email.trim())}`, { replace: true, state: { message: result.message || 'Your account is created. Verify your email to finish signing up.', developmentVerificationUrl: result.developmentVerificationUrl, role: result.user?.role || form.role } });
     } catch (error) {
       setMessage(error.message);
       setErrors(error.fields || []);
