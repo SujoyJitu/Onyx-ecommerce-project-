@@ -1,0 +1,61 @@
+{
+  "info": {
+    "_postman_id": "6f7f0f66-e890-47bf-9fd8-913a8771f905",
+    "name": "Onyx Auth API",
+    "description": "Auth route checks. Set baseUrl to the running backend URL. Registration requests generate unique emails automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:5000" },
+    { "key": "customerEmail", "value": "" },
+    { "key": "vendorEmail", "value": "" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Register customer (201)",
+      "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["pm.collectionVariables.set('customerEmail', `customer-${Date.now()}@example.com`);"] } }, { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('creates a customer without exposing password', () => {", "  pm.response.to.have.status(201);", "  const body = pm.response.json();", "  pm.expect(body.user.role).to.eql('customer');", "  pm.expect(body.user).not.to.have.property('password');", "});"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"phone\": \"+15555550101\",\n  \"password\": \"TestPass123!\"\n}" }, "url": "{{baseUrl}}/api/auth/register" }
+    },
+    {
+      "name": "Register duplicate email (409)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('rejects duplicate email', () => pm.response.to.have.status(409));"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"phone\": \"+15555550101\",\n  \"password\": \"TestPass123!\"\n}" }, "url": "{{baseUrl}}/api/auth/register" }
+    },
+    {
+      "name": "Register invalid input (400)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('returns field validation errors', () => {", "  pm.response.to.have.status(400);", "  pm.expect(pm.response.json().errors).to.be.an('array').that.is.not.empty;", "});"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"A\",\n  \"email\": \"not-an-email\",\n  \"phone\": \"1\",\n  \"password\": \"short\",\n  \"role\": \"admin\"\n}" }, "url": "{{baseUrl}}/api/auth/register" }
+    },
+    {
+      "name": "Login invalid credentials (401)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('rejects incorrect password', () => pm.response.to.have.status(401));"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"WrongPassword123!\"\n}" }, "url": "{{baseUrl}}/api/auth/login" }
+    },
+    {
+      "name": "Login customer (200)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('returns JWT and customer profile', () => {", "  pm.response.to.have.status(200);", "  const body = pm.response.json();", "  pm.expect(body.token).to.be.a('string');", "  pm.expect(body.user.role).to.eql('customer');", "  pm.collectionVariables.set('token', body.token);", "});"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"TestPass123!\"\n}" }, "url": "{{baseUrl}}/api/auth/login" }
+    },
+    {
+      "name": "Get me without token (401)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('blocks unauthenticated request', () => pm.response.to.have.status(401));"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/auth/me" }
+    },
+    {
+      "name": "Get me with invalid token (401)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('rejects an invalid token', () => pm.response.to.have.status(401));"] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer invalid.token.value" }], "url": "{{baseUrl}}/api/auth/me" }
+    },
+    {
+      "name": "Get me with token (200)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('returns the current user', () => {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().user.email).to.eql(pm.collectionVariables.get('customerEmail'));", "});"] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/auth/me" }
+    },
+    {
+      "name": "Register vendor (201)",
+      "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["pm.collectionVariables.set('vendorEmail', `vendor-${Date.now()}@example.com`);"] } }, { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('creates a vendor account', () => {", "  pm.response.to.have.status(201);", "  pm.expect(pm.response.json().user.role).to.eql('vendor');", "});"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Vendor\",\n  \"email\": \"{{vendorEmail}}\",\n  \"phone\": \"+15555550102\",\n  \"password\": \"TestPass123!\",\n  \"role\": \"vendor\"\n}" }, "url": "{{baseUrl}}/api/auth/register" }
+    }
+  ]
+}

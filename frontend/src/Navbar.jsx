@@ -1,12 +1,22 @@
 import { useState } from "react";
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/useAuth.js';
 
 const links = ['Home', 'Shop', 'Categories', 'Become a Seller'];
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
-  const signedIn = false;
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const cartCount = 0;
+  const navTargets = { Home: '/#home', Shop: '/#shop', Categories: '/#categories', 'Become a Seller': '/#become-a-seller' };
+  const signOut = () => {
+    logout();
+    setUserOpen(false);
+    setMenuOpen(false);
+    navigate('/');
+  };
   return (<>
       <header className="site-header">
         <nav className="navbar" aria-label="Main navigation">
@@ -23,19 +33,19 @@ export default function Navbar() {
 
           <div className={`nav-content${menuOpen ? ' is-open' : ''}`}>
             <div className="nav-links">
-              {links.map((link) => <a href={`#${link.toLowerCase().replaceAll(' ', '-')}`} key={link}>{link}</a>)}
+              {links.map((link) => <Link to={navTargets[link]} key={link} onClick={() => setMenuOpen(false)}>{link}</Link>)}
             </div>
             <div className="nav-actions">
               <a className="cart-link" href="#cart" aria-label={`Cart, ${cartCount} items`}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
                 <span>Cart</span><b className="cart-count">{cartCount}</b>
               </a>
-              {signedIn ? (
+              {user ? (
                 <div className="user-wrap">
-                  <button className="user-button" onClick={() => setUserOpen(!userOpen)}>Account <span>⌄</span></button>
-                  {userOpen && <div className="user-menu"><a href="#profile">Profile</a><a href="#orders">Orders</a><button onClick={() => setUserOpen(false)}>Logout</button></div>}
+                  <button className="user-button" aria-expanded={userOpen} onClick={() => setUserOpen(!userOpen)}>{user.name.split(' ')[0]} <span>⌄</span></button>
+                  {userOpen && <div className="user-menu"><Link to="/account" onClick={() => setUserOpen(false)}>My account</Link><button onClick={signOut}>Sign out</button></div>}
                 </div>
-              ) : <a className="auth-button" href="#login">Login / Sign Up</a>}
+              ) : <div className="auth-nav-actions"><Link className="auth-button" to="/signin" onClick={() => setMenuOpen(false)}>Sign in</Link><Link className="auth-signup-link" to="/signup" onClick={() => setMenuOpen(false)}>Sign up</Link></div>}
             </div>
           </div>
 

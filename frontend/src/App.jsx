@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from './MainLayout.jsx';
 import NotFound from './NotFound.jsx';
+import SignUp from './pages/SignUp.jsx';
+import SignIn from './pages/SignIn.jsx';
+import Account from './pages/Account.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import './App.css';
 
 const slides = [
@@ -95,6 +99,9 @@ function App() {
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
