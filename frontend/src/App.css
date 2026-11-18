@@ -111,6 +111,9 @@
 .footer-social { display: flex; gap: 9px; }.footer-social a { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid #55565a; border-radius: 50%; color: #e2ca8b; font-size: 12px; font-weight: 600; text-decoration: none; }
 .footer-column { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }.footer-column h2 { margin: 2px 0 8px; color: white; font-size: 12px; font-weight: 600; }.footer-column a, .footer-column span { color: #b8b8b4; font-size: 11px; text-decoration: none; }.footer-column a:hover { color: #e2ca8b; }.footer-contact .payment-title { margin: 10px 0 0; }.payment-methods { display: flex; gap: 7px; }.payment-methods span { padding: 6px 8px; color: #343538; background: #f4f2ec; border-radius: 2px; font-size: 9px; font-weight: 700; }
 .footer-bottom { min-height: 58px; padding: 16px max(calc((100% - 1164px) / 2), 38px); display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid #414246; color: #a8a9a7; font-size: 10px; }
+.not-found { min-height: 62vh; padding: 100px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.not-found h1 { max-width: 620px; margin: 16px 0 10px; color: var(--onyx); font-family: 'Poppins', sans-serif; font-size: clamp(32px, 5vw, 54px); line-height: 1.2; }
+.not-found p { margin: 0 0 24px; color: var(--muted); font-size: 14px; line-height: 1.7; }
 @media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } }
 
 @media (max-width: 1050px) {

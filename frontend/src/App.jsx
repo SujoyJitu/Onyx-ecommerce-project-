@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import MainLayout from './MainLayout.jsx';
+import NotFound from './NotFound.jsx';
 import './App.css';
 
-const links = ['Home', 'Shop', 'Categories', 'Become a Seller'];
 const slides = [
   { image: '/Photos/banner%20image%201.jpg', kicker: 'THE ONYX EDIT', heading: 'Elegance in every detail.', description: 'Discover considered design, timeless pieces, and a more elevated way to shop.' },
   { image: '/Photos/banner%20image%202.jpg', kicker: 'GIFT BEAUTIFULLY', heading: 'Timeless luxury, thoughtfully chosen.', description: 'Find a memorable gift for every occasion, wrapped in the art of giving.' },
@@ -24,11 +26,7 @@ const shops = [
   { initials: 'AT', name: 'ATELIER NOIR', specialty: 'Independent fashion', color: 'shop-charcoal' },
 ];
 
-function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [userOpen, setUserOpen] = useState(false);
-  const [signedIn] = useState(false); // Demo state until login is connected.
-  const cartCount = 0; // Connect this to the cart when shopping is implemented.
+function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   // Move to the next banner every six seconds.
@@ -41,42 +39,7 @@ function App() {
 
   return (
     <>
-      <header className="site-header">
-        <nav className="navbar" aria-label="Main navigation">
-          <a className="brand" href="#home" aria-label="Onyx home">
-            <img src="/Photos/logo.jpg" alt="ONYX — Elevated E-commerce" />
-          </a>
 
-          <form className="search" role="search" onSubmit={(event) => event.preventDefault()}>
-            <input type="search" placeholder="Search products..." aria-label="Search products" />
-            <button type="submit" aria-label="Search">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
-            </button>
-          </form>
-
-          <div className={`nav-content${menuOpen ? ' is-open' : ''}`}>
-            <div className="nav-links">
-              {links.map((link) => <a href={`#${link.toLowerCase().replaceAll(' ', '-')}`} key={link}>{link}</a>)}
-            </div>
-            <div className="nav-actions">
-              <a className="cart-link" href="#cart" aria-label={`Cart, ${cartCount} items`}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
-                <span>Cart</span><b className="cart-count">{cartCount}</b>
-              </a>
-              {signedIn ? (
-                <div className="user-wrap">
-                  <button className="user-button" onClick={() => setUserOpen(!userOpen)}>Account <span>⌄</span></button>
-                  {userOpen && <div className="user-menu"><a href="#profile">Profile</a><a href="#orders">Orders</a><button onClick={() => setUserOpen(false)}>Logout</button></div>}
-                </div>
-              ) : <a className="auth-button" href="#login">Login / Sign Up</a>}
-            </div>
-          </div>
-
-          <button className="menu-toggle" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
-            <span /><span /><span />
-          </button>
-        </nav>
-      </header>
       <main>
         <section className="hero" aria-label="Featured collections">
           {slides.map((slide, index) => (
@@ -122,17 +85,19 @@ function App() {
 
         <section className="newsletter-section"><div><span className="eyebrow">THE ONYX LETTER</span><h2>A little something lovely for your inbox.</h2><p>New finds, thoughtful stories, and 10% off your first order.</p></div><form className="newsletter-form" onSubmit={(event) => { event.preventDefault(); event.currentTarget.reset(); }}><label className="sr-only" htmlFor="newsletter-email">Email address</label><input id="newsletter-email" type="email" placeholder="Your email address" required /><button type="submit">Sign me up <span>→</span></button><small>By subscribing, you agree to receive ONYX updates. Unsubscribe anytime.</small></form></section>
       </main>
-      <footer className="site-footer">
-        <div className="footer-main">
-          <div className="footer-about"><a className="footer-brand" href="#home"><img src="/Photos/logo.jpg" alt="ONYX" /></a><p>Thoughtful finds, timeless design, and independent makers — all in one considered marketplace.</p><div className="footer-social"><a href="https://instagram.com" aria-label="Instagram">ig</a><a href="https://facebook.com" aria-label="Facebook">f</a><a href="https://pinterest.com" aria-label="Pinterest">p</a></div></div>
-          <div className="footer-column"><h2>Explore</h2><a href="#about">About</a><a href="#contact">Contact</a><a href="#faq">FAQ</a></div>
-          <div className="footer-column"><h2>Help &amp; policies</h2><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#returns">Return policy</a></div>
-          <div className="footer-column"><h2>Categories</h2>{categories.map(({name}) => <a href={`#${name.toLowerCase()}`} key={name}>{name}</a>)}</div>
-          <div className="footer-column footer-contact"><h2>Get in touch</h2><a href="mailto:hello@onyx.com">hello@onyx.com</a><a href="tel:+18005550148">+1 (800) 555-0148</a><span>Mon–Fri, 9am–5pm</span><h2 className="payment-title">We accept</h2><div className="payment-methods" aria-label="Visa, Mastercard, and PayPal accepted"><span>VISA</span><span>MC</span><span>PayPal</span></div></div>
-        </div>
-        <div className="footer-bottom"><span>© {new Date().getFullYear()} ONYX Marketplace. All rights reserved.</span><span>Made for finding the good things.</span></div>
-      </footer>
+
     </>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   );
 }
 
