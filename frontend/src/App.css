@@ -143,6 +143,8 @@
 .auth-error { color: #8d302b; background: #fbefee; border: 1px solid #efd0ce; }
 .auth-error ul { margin: 6px 0 0; padding-left: 18px; }
 .auth-success { color: #3c6747; background: #eef6ef; border: 1px solid #d0e5d3; }
+.auth-dev-link { margin: 12px 0 0; padding: 12px 14px; color: #725d2e; background: #f7f3e9; border: 1px solid #e8dcc0; border-radius: 3px; font-size: 12px; line-height: 1.6; }
+.auth-dev-link a { color: #59451f; font-weight: 700; }
 .auth-loading { min-height: 64vh; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
 .account-card { width: min(100%, 650px); margin-top: 30px; }
 .account-details { margin: 28px 0 0; border-top: 1px solid #e9e7e1; }

@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/products');
 
 // Create the Express application.
 const app = express();
@@ -12,6 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 
 // Let clients check whether the backend is running.
 app.get('/api/health', (req, res) => {
@@ -23,6 +25,14 @@ app.use((error, req, res, next) => {
     return res.status(400).json({ message: 'Request body must contain valid JSON.' });
   }
   if (error.statusCode) return res.status(error.statusCode).json({ message: error.message });
+  if (error.name === 'MulterError') {
+    const message = error.code === 'LIMIT_FILE_SIZE'
+      ? 'Each image must be 5 MB or smaller.'
+      : error.code === 'LIMIT_FILE_COUNT'
+        ? 'Upload no more than 8 images.'
+        : 'The uploaded files could not be processed.';
+    return res.status(400).json({ message });
+  }
   console.error(error);
   return res.status(500).json({ message: 'An unexpected server error occurred.' });
 });

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/useAuth.js';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { verifyEmail, resendVerification } = useAuth();
   const token = searchParams.get('token') || '';
   const emailFromUrl = searchParams.get('email') || '';
@@ -12,6 +13,7 @@ export default function VerifyEmail() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [developmentVerificationUrl, setDevelopmentVerificationUrl] = useState(location.state?.developmentVerificationUrl || '');
 
   const verify = async () => {
     setIsSubmitting(true);
@@ -36,6 +38,7 @@ export default function VerifyEmail() {
     try {
       const result = await resendVerification(email.trim());
       setMessage(result.message);
+      setDevelopmentVerificationUrl(result.developmentVerificationUrl || '');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -49,6 +52,7 @@ export default function VerifyEmail() {
       <h1 id="verify-title">Verify your email</h1>
       <p className="auth-intro">Open the link we emailed you to confirm your address. Verification links expire after 24 hours.</p>
       {message && <p className="auth-success" role="status">{message}</p>}
+      {developmentVerificationUrl && <p className="auth-dev-link">Mail is not configured in this development environment. <a href={developmentVerificationUrl}>Open the verification link</a>.</p>}
       {error && <p className="auth-error" role="alert">{error}</p>}
       {token && !verified && <button className="auth-submit" type="button" onClick={verify} disabled={isSubmitting}>{isSubmitting ? 'Verifying…' : 'Verify email address'}</button>}
       {!verified && <form className="auth-form resend-form" onSubmit={resend}>

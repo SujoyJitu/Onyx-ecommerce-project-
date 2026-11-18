@@ -28,8 +28,8 @@ export default function SignUp() {
 
     setIsSubmitting(true);
     try {
-      await register({ ...form, name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() });
-      navigate(`/verify-email?email=${encodeURIComponent(form.email.trim())}`, { replace: true, state: { message: 'Your account is created. Verify your email to finish signing up.' } });
+      const result = await register({ ...form, name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() });
+      navigate(`/verify-email?email=${encodeURIComponent(form.email.trim())}`, { replace: true, state: { message: result.message || 'Your account is created. Verify your email to finish signing up.', developmentVerificationUrl: result.developmentVerificationUrl } });
     } catch (error) {
       setMessage(error.message);
       setErrors(error.fields || []);
