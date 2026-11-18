@@ -149,6 +149,20 @@
 .account-details div { padding: 16px 0; display: grid; grid-template-columns: 150px 1fr; gap: 15px; border-bottom: 1px solid #e9e7e1; font-size: 13px; }
 .account-details dt { color: var(--muted); }
 .account-details dd { margin: 0; color: var(--onyx); font-weight: 600; overflow-wrap: anywhere; }
+.auth-divider { position: relative; margin: 24px 0 18px; color: var(--muted); text-align: center; font-size: 10px; }
+.auth-divider::before { position: absolute; top: 50%; right: 0; left: 0; height: 1px; background: #e9e7e1; content: ''; }
+.auth-divider span { position: relative; padding: 0 11px; background: white; }
+.google-signin-wrap { min-height: 42px; display: flex; flex-direction: column; align-items: center; }
+.google-signin { width: 100%; min-height: 40px; display: flex; justify-content: center; }
+.google-unavailable { margin: 0; color: var(--muted); text-align: center; font-size: 11px; }
+.resend-form { margin-top: 28px; padding-top: 22px; border-top: 1px solid #e9e7e1; }
+.resend-form > label { margin-top: 0; line-height: 1.6; }
+.auth-secondary-submit { min-height: 43px; margin-top: 12px; color: var(--onyx); background: #f7f5ef; border: 1px solid #dedbd3; border-radius: 3px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.auth-secondary-submit:hover { border-color: var(--gold); }
+.auth-secondary-submit:disabled { opacity: .65; cursor: wait; }
+.verify-account-link { margin-top: 22px; }
+@media (max-width: 760px) { .auth-nav-actions { justify-content: flex-end; } }
+@media (max-width: 520px) { .auth-page { padding: 36px 14px 56px; }.auth-card, .account-card { padding: 30px 22px; }.account-details div { grid-template-columns: 1fr; gap: 6px; } }
 @media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } }
 
 @media (max-width: 1050px) {

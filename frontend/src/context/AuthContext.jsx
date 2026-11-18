@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthContext } from './authContext.js';
 
 const TOKEN_KEY = 'onyx_auth_token';
@@ -57,22 +57,39 @@ export function AuthProvider({ children }) {
     return () => { cancelled = true; };
   }, [token]);
 
-  const login = async (credentials) => {
-    const result = await authRequest('/login', { method: 'POST', body: credentials });
+  const establishSession = useCallback((result) => {
     window.localStorage.setItem(TOKEN_KEY, result.token);
     setUser(result.user);
     setToken(result.token);
+  }, []);
+
+  const login = useCallback(async (credentials) => {
+    const result = await authRequest('/login', { method: 'POST', body: credentials });
+    establishSession(result);
     return result.user;
-  };
+  }, [establishSession]);
 
-  const register = (details) => authRequest('/register', { method: 'POST', body: details });
+  const register = useCallback((details) => authRequest('/register', { method: 'POST', body: details }), []);
+  const resendVerification = useCallback((email) => authRequest('/resend-verification', { method: 'POST', body: { email } }), []);
+  const verifyEmail = useCallback(async (verificationToken) => {
+    const result = await authRequest('/verify-email', { method: 'POST', body: { token: verificationToken } });
+    establishSession(result);
+    return result.user;
+  }, [establishSession]);
+  const forgotPassword = useCallback((email) => authRequest('/forgot-password', { method: 'POST', body: { email } }), []);
+  const resetPassword = useCallback((resetToken, password) => authRequest('/reset-password', { method: 'POST', body: { token: resetToken, password } }), []);
+  const googleLogin = useCallback(async (credential) => {
+    const result = await authRequest('/google', { method: 'POST', body: { credential } });
+    establishSession(result);
+    return result.user;
+  }, [establishSession]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     window.localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
-  };
+  }, []);
 
-  const value = useMemo(() => ({ user, token, isLoading, login, register, logout }), [user, token, isLoading]);
+  const value = useMemo(() => ({ user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout }), [user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

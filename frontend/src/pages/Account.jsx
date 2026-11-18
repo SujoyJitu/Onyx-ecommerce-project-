@@ -9,7 +9,7 @@ export default function Account() {
         <h1>Welcome, {user.name}</h1>
         <dl className="account-details">
           <div><dt>Email</dt><dd>{user.email}</dd></div>
-          <div><dt>Phone</dt><dd>{user.phone}</dd></div>
+          <div><dt>Phone</dt><dd>{user.phone || 'Not added'}</dd></div>
           <div><dt>Account type</dt><dd>{user.role === 'vendor' ? 'Seller' : user.role}</dd></div>
         </dl>
       </section>
