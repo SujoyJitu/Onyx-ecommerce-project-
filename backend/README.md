@@ -10,6 +10,8 @@ Start the API with `npm run dev`; it listens on port 5000 by default. For local 
 
 For product image uploads, set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in the backend `.env`. Product requests accept multipart form data with repeated `images` file fields (JPEG, PNG, or WebP; up to 8 files and 5 MB per file). Product create/edit can also be sent as JSON when no new images are being uploaded.
 
+Create the first administrator deliberately; public registration cannot create admin accounts. Set `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` (minimum 12 characters) in the backend environment, then run `npm run admin:create`. The command refuses to overwrite an existing account. Sign in through `/admin/login` in the frontend or `POST /api/admin/login` in the API.
+
 ## Authentication routes
 
 All routes use JSON request and response bodies.
@@ -53,11 +55,19 @@ Reviews are public to read at `GET /api/products/:productId/reviews` with option
 
 ## Orders
 
-Order routes require a verified JWT. Create an order as a customer with `POST /api/orders` and `{ "items": [{ "productId": "...", "qty": 2 }], "address": { "recipientName": "...", "phone": "...", "street": "...", "city": "...", "region": "...", "postalCode": "...", "country": "...", "notes": "..." }, "paymentMethod": "cash_on_delivery" }`. `items` may be omitted or empty to order the signed-in customer's cart. Cash on delivery is currently the only accepted payment method. Prices, vendors, and totals are read from the current product records; client-supplied prices and customer IDs are ignored. Stock is reserved when the order is created and cart items used for the order are removed.
+Order routes require a verified JWT. Create an order with `paymentMethod: "cash_on_delivery"` or `"sslcommerz"`. `items` may be omitted or empty to order the signed-in customer's cart. Prices, vendors, and totals are read from current product records; client-supplied prices and customer IDs are ignored. Stock is reserved when the order is created and cart items used for the order are removed.
 
 `GET /api/orders/my` returns the signed-in customer's order history. Vendors can use `GET /api/orders/vendor` to see orders containing their products and `PUT /api/orders/:id/status` with `{ "status": "processing" | "shipped" | "delivered" }` to advance their own items one step at a time. For multi-vendor orders, each vendor updates their own lines and the overall order status reflects their fulfillment progress.
 
-Customers can cancel with `POST /api/orders/:id/cancel`. Cancellation is available while an order is pending or processing and payment is not marked paid; it restores the reserved product stock. Payment starts as `pending`. No payment provider is connected yet, so a trusted payment integration must mark successful payments as paid before paid-order review eligibility is enabled. Clients cannot create or change payment status.
+For SSLCommerz, set `API_URL`, `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_LIVE`, and `PAYMENT_CURRENCY` in the backend environment, and configure the same public `/api/payments/sslcommerz/ipn` URL in the gateway dashboard. `POST /api/payments/sslcommerz/:orderId` creates a hosted session. The browser return and IPN both validate payment server to server before setting the order paid. `PAYMENT_CURRENCY` defaults to USD and SSLCommerz converts non-BDT amounts using its current conversion rate. Use sandbox credentials unless the merchant account is ready for live transactions. Customers can cancel unpaid pending orders with `POST /api/orders/:id/cancel`; failed or cancelled gateway sessions release reserved stock.
+
+Delivered orders can request a return with `POST /api/orders/:id/returns` using `{ "reason": "...", "details": "..." }`. Customers can see requests at `GET /api/orders/returns/my`. Admins review requests through `GET /api/admin/returns` and `PUT /api/admin/returns/:id` with `status: "approved" | "rejected" | "refunded"`; the final refunded status is an administrative record and should only be set after the merchant has completed the gateway or off-platform refund. Confirmation, payment, return decision, cancellation, and order status emails use configured SMTP. SMS is not configured.
+
+## Admin panel
+
+Admin APIs require a verified admin JWT. The admin dashboard provides user and vendor counts, order/product counts, delivered gross sales, and commission revenue. Admins can approve or block vendor shops, block or restore customer/vendor accounts, hide or mark products unsafe, manage categories, review orders and reconcile payment/order status, and set the global commission rate. Vendor products become publicly visible only when their shop is approved and the product is active and moderation-visible.
+
+Commission is stored on each new order line as a rate, amount, and vendor earning, so a later rate change does not alter existing orders. Coupon CRUD is available in the admin panel, but coupon redemption is not wired into checkout yet. Banner CRUD is available, and active banners are served by `GET /api/banners` and shown on the storefront homepage.
 
 Vendor dashboard analytics use vendor-owned order lines and products. `GET /api/payouts/my` returns earnings from delivered items, payout requests, and the available amount. `POST /api/payouts` accepts `{ "amount": 25, "note": "..." }` and creates a pending manual payout request; pending requests reserve available earnings. `DELETE /api/payouts/:id` lets a vendor withdraw their own pending request. Payment is handled outside the application.
 

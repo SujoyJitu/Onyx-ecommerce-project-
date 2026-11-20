@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
   savedAddresses: { type: [addressSchema], default: [] },
   password: { type: String, required() { return !this.googleId; }, minlength: [8, 'Password must be at least 8 characters'], select: false },
   role: { type: String, enum: ['customer', 'vendor', 'admin'], default: 'customer' },
+  isBlocked: { type: Boolean, default: false, index: true },
   emailVerified: { type: Boolean, default: false },
   verificationTokenHash: { type: String, select: false },
   verificationExpires: { type: Date, select: false },

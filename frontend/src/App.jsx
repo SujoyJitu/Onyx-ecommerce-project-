@@ -19,11 +19,26 @@ import Cart from './pages/Cart.jsx';
 import Wishlist from './pages/Wishlist.jsx';
 import Checkout from './pages/Checkout.jsx';
 import OrderSuccess from './pages/OrderSuccess.jsx';
+import PaymentResult from './pages/PaymentResult.jsx';
 import MyOrders from './pages/MyOrders.jsx';
 import OrderTracking from './pages/OrderTracking.jsx';
 import VendorOrders from './pages/VendorOrders.jsx';
 import VendorEarnings from './pages/VendorEarnings.jsx';
 import CustomerOnlyRoute from './components/CustomerOnlyRoute.jsx';
+import AdminOnlyRoute from './components/AdminOnlyRoute.jsx';
+import AdminLayout from './components/AdminLayout.jsx';
+import AdminLogin from './pages/AdminLogin.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import AdminVendors from './pages/AdminVendors.jsx';
+import AdminUsers from './pages/AdminUsers.jsx';
+import AdminProducts from './pages/AdminProducts.jsx';
+import AdminCategories from './pages/AdminCategories.jsx';
+import AdminOrders from './pages/AdminOrders.jsx';
+import AdminReturns from './pages/AdminReturns.jsx';
+import AdminCommission from './pages/AdminCommission.jsx';
+import AdminCoupons from './pages/AdminCoupons.jsx';
+import AdminBanners from './pages/AdminBanners.jsx';
+import { apiRequest } from './services/http.js';
 import VendorDashboardLayout from './components/VendorDashboardLayout.jsx';
 import VendorOnlyRoute from './components/VendorOnlyRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -53,21 +68,30 @@ const shops = [
 
 function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [heroSlides, setHeroSlides] = useState(slides);
 
-  // Move to the next banner every six seconds.
   useEffect(() => {
-    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 6000);
-    return () => window.clearInterval(timer);
+    apiRequest('/api/banners').then(({ banners }) => {
+      if (banners?.length) {
+        setHeroSlides(banners.map((banner) => ({ image: banner.imageUrl, kicker: 'ONYX MARKETPLACE', heading: banner.title, description: banner.subtitle, linkUrl: banner.linkUrl || '/shop' })));
+        setActiveSlide(0);
+      }
+    }).catch(() => {});
   }, []);
 
-  const changeSlide = (direction) => setActiveSlide((current) => (current + direction + slides.length) % slides.length);
+  useEffect(() => {
+    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % heroSlides.length), 6000);
+    return () => window.clearInterval(timer);
+  }, [heroSlides.length]);
+
+  const changeSlide = (direction) => setActiveSlide((current) => (current + direction + heroSlides.length) % heroSlides.length);
 
   return (
     <>
 
       <main>
         <section className="hero" aria-label="Featured collections">
-          {slides.map((slide, index) => (
+          {heroSlides.map((slide, index) => (
             <article className={`hero-slide${index === activeSlide ? ' is-active' : ''}`} key={slide.image} aria-hidden={index !== activeSlide}>
               <img className="hero-image" src={slide.image} alt="" />
               <div className="hero-shade" />
@@ -76,7 +100,7 @@ function HomePage() {
                 <h1>{slide.heading}</h1>
                 <p>{slide.description}</p>
                 <div className="hero-buttons">
-                  <Link className="hero-button hero-button-primary" to="/shop">Shop Now <span aria-hidden="true">→</span></Link>
+                  <Link className="hero-button hero-button-primary" to={slide.linkUrl || '/shop'}>Shop Now <span aria-hidden="true">→</span></Link>
                   <Link className="hero-button hero-button-outline" to="/seller/register">Start Selling</Link>
                 </div>
               </div>
@@ -85,7 +109,7 @@ function HomePage() {
           <button className="hero-arrow hero-arrow-prev" aria-label="Previous banner" onClick={() => changeSlide(-1)}>‹</button>
           <button className="hero-arrow hero-arrow-next" aria-label="Next banner" onClick={() => changeSlide(1)}>›</button>
           <div className="hero-dots" aria-label="Choose banner">
-            {slides.map((slide, index) => <button key={slide.image} aria-label={`Show banner ${index + 1}`} aria-current={index === activeSlide} onClick={() => setActiveSlide(index)} />)}
+            {heroSlides.map((slide, index) => <button key={slide.image} aria-label={`Show banner ${index + 1}`} aria-current={index === activeSlide} onClick={() => setActiveSlide(index)} />)}
           </div>
         </section>
         <section className="content-section categories-section" id="categories">
@@ -118,6 +142,21 @@ function HomePage() {
 function App() {
   return (
     <Routes>
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route element={<AdminOnlyRoute />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="vendors" element={<AdminVendors />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="returns" element={<AdminReturns />} />
+          <Route path="commission" element={<AdminCommission />} />
+          <Route path="coupons" element={<AdminCoupons />} />
+          <Route path="banners" element={<AdminBanners />} />
+        </Route>
+      </Route>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={<Shop />} />
@@ -126,6 +165,7 @@ function App() {
         <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><CustomerOnlyRoute><Checkout /></CustomerOnlyRoute></ProtectedRoute>} />
         <Route path="/orders/success/:orderId" element={<ProtectedRoute><CustomerOnlyRoute><OrderSuccess /></CustomerOnlyRoute></ProtectedRoute>} />
+        <Route path="/payment/result" element={<ProtectedRoute><CustomerOnlyRoute><PaymentResult /></CustomerOnlyRoute></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><CustomerOnlyRoute><MyOrders /></CustomerOnlyRoute></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><CustomerOnlyRoute><OrderTracking /></CustomerOnlyRoute></ProtectedRoute>} />
         <Route path="/signup" element={<SignUp />} />

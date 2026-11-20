@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Review = require('../models/Review');
+const Shop = require('../models/Shop');
+const User = require('../models/User');
 const { authenticate, authorizeRoles } = require('../middleware/auth');
 const { uploadProductImages } = require('../middleware/productUpload');
 const { uploadImageBuffer, deleteImages } = require('../services/cloudinary');
@@ -17,7 +19,10 @@ router.get('/', async (req, res, next) => {
   try {
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
-    const filter = { status: 'active' };
+    const filter = { status: 'active', moderationStatus: 'visible' };
+    const approvedShops = await Shop.find({ status: 'approved' }).select('owner').lean();
+    const approvedVendors = await User.find({ _id: { $in: approvedShops.map((shop) => shop.owner) }, isBlocked: { $ne: true } }).distinct('_id');
+    filter.vendor = { $in: approvedVendors };
     if (req.query.category) {
       if (mongoose.isValidObjectId(req.query.category)) filter.category = req.query.category;
       else {
@@ -147,8 +152,9 @@ router.get('/my', ...vendorOnly, async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid product id.' });
   try {
-    const product = await Product.findOne({ _id: req.params.id, status: 'active' }).populate('category', 'name slug').populate('vendor', 'name');
+    const product = await Product.findOne({ _id: req.params.id, status: 'active', moderationStatus: 'visible' }).populate('category', 'name slug').populate('vendor', 'name');
     if (!product) return res.status(404).json({ message: 'Product not found.' });
+    if (!await Shop.exists({ owner: product.vendor._id, status: 'approved' }) || await User.exists({ _id: product.vendor._id, isBlocked: true })) return res.status(404).json({ message: 'Product not found.' });
     return res.json({ product });
   } catch (error) { return next(error); }
 });

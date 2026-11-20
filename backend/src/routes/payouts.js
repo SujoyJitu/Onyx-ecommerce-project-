@@ -12,7 +12,9 @@ async function earningsFor(vendorId) {
   let earned = 0;
   for (const order of orders) {
     for (const item of order.items) {
-      if (item.vendor.toString() === vendorId.toString() && item.fulfillmentStatus === 'delivered') earned += item.price * item.qty;
+      if (item.vendor.toString() === vendorId.toString() && item.fulfillmentStatus === 'delivered') {
+        earned += item.commissionRate === 0 ? item.price * item.qty : item.vendorEarning;
+      }
     }
   }
   const payoutRequests = await PayoutRequest.find({ vendor: vendorId }).sort({ createdAt: -1 });

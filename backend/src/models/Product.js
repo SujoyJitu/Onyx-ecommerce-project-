@@ -17,6 +17,8 @@ const productSchema = new mongoose.Schema({
   brand: { type: String, trim: true, maxlength: 100, default: '' },
   specifications: { type: mongoose.Schema.Types.Mixed, default: {} },
   status: { type: String, enum: ['draft', 'active', 'archived'], default: 'active', index: true },
+  moderationStatus: { type: String, enum: ['visible', 'hidden', 'unsafe'], default: 'visible', index: true },
+  moderationReason: { type: String, trim: true, maxlength: 500, default: '' },
   createdAt: { type: Date, default: Date.now, index: true },
 }, { timestamps: true });
 

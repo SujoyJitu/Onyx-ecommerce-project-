@@ -26,4 +26,15 @@ async function sendAuthEmail({ to, subject, text, html, developmentUrl }) {
   return null;
 }
 
-module.exports = { sendAuthEmail };
+async function sendOrderEmail({ to, subject, text }) {
+  const transporter = createTransporter();
+  if (!transporter) {
+    if (process.env.NODE_ENV === 'production') return false;
+    console.info(`[development order email] ${to}: ${subject}`);
+    return false;
+  }
+  await transporter.sendMail({ from: process.env.SMTP_FROM, to, subject, text });
+  return true;
+}
+
+module.exports = { sendAuthEmail, sendOrderEmail };

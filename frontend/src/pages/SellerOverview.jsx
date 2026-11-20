@@ -46,7 +46,7 @@ export default function SellerOverview() {
     <div className="vendor-page-heading"><div><span className="eyebrow">SELLER STUDIO</span><h2>Overview</h2><p>Your shop performance and fulfillment at a glance.</p></div>{loading && <span className="vendor-optional">Updating…</span>}</div>
     {error && <p className="vendor-error" role="alert">{error}</p>}
     <div className="vendor-stat-grid vendor-stat-grid-three">
-      <article className="vendor-stat-card"><span>Delivered sales</span><strong>{money(deliveredSales)}</strong><small>Value of items marked delivered</small></article>
+      <article className="vendor-stat-card"><span>Delivered sales</span><strong>{money(deliveredSales)}</strong><small>Gross value of items marked delivered</small></article>
       <article className="vendor-stat-card"><span>Total orders</span><strong>{totalOrders}</strong><Link to="/seller/dashboard/orders">Review orders</Link></article>
       <article className="vendor-stat-card"><span>Total products</span><strong>{summary.products.length}</strong><Link to="/seller/dashboard/products">Manage products</Link></article>
     </div>

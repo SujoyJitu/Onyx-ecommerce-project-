@@ -104,6 +104,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
+    if (user.isBlocked) return res.status(403).json({ message: 'This account has been blocked. Contact support for help.' });
     if (!user.emailVerified) return res.status(403).json({ message: 'Please verify your email address before signing in.' });
     return res.json({ message: 'Login successful.', token: issueToken(user), user: publicUser(user) });
   } catch (error) {
@@ -205,6 +206,7 @@ router.post('/google', loginLimiter, async (req, res, next) => {
     if (!user) {
       user = new User({ name: profile.name || profile.email.split('@')[0], email: profile.email.toLowerCase(), emailVerified: true, googleId: profile.sub, phone: '' });
     } else {
+      if (user.isBlocked) return res.status(403).json({ message: 'This account has been blocked. Contact support for help.' });
       user.googleId = profile.sub;
       user.emailVerified = true;
     }

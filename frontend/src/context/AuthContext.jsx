@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthContext } from './authContext.js';
+import { apiRequest } from '../services/http.js';
 
 const TOKEN_KEY = 'onyx_auth_token';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -68,6 +69,11 @@ export function AuthProvider({ children }) {
     establishSession(result);
     return result.user;
   }, [establishSession]);
+  const adminLogin = useCallback(async (credentials) => {
+    const result = await apiRequest('/api/admin/login', { method: 'POST', body: credentials });
+    establishSession(result);
+    return result.user;
+  }, [establishSession]);
 
   const register = useCallback((details) => authRequest('/register', { method: 'POST', body: details }), []);
   const resendVerification = useCallback((email) => authRequest('/resend-verification', { method: 'POST', body: { email } }), []);
@@ -97,6 +103,6 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout, updateCurrentUser, changePassword }), [user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout, updateCurrentUser, changePassword]);
+  const value = useMemo(() => ({ user, token, isLoading, login, adminLogin, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout, updateCurrentUser, changePassword }), [user, token, isLoading, login, adminLogin, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout, updateCurrentUser, changePassword]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -37,6 +37,11 @@ export default function Checkout() {
     try {
       const { order } = await apiRequest('/api/orders', { method: 'POST', body: { address, paymentMethod } });
       await refreshCart().catch(() => {});
+      if (paymentMethod === 'sslcommerz') {
+        const { paymentUrl } = await apiRequest(`/api/payments/sslcommerz/${order._id}`, { method: 'POST' });
+        window.location.assign(paymentUrl);
+        return;
+      }
       navigate(`/orders/success/${order._id}`, { replace: true });
     } catch (requestError) { setError(requestError.message); }
     finally { setSubmitting(false); }
@@ -65,6 +70,7 @@ export default function Checkout() {
         </section>
         <section className="checkout-section"><span className="eyebrow">02 · PAYMENT</span><h2>Payment method</h2>
           <label className="payment-choice"><input type="radio" name="paymentMethod" value="cash_on_delivery" checked={paymentMethod === 'cash_on_delivery'} onChange={(event) => setPaymentMethod(event.target.value)} /><span><strong>Cash on delivery</strong><small>Pay when your order arrives.</small></span><b>{money(total)}</b></label>
+          <label className="payment-choice"><input type="radio" name="paymentMethod" value="sslcommerz" checked={paymentMethod === 'sslcommerz'} onChange={(event) => setPaymentMethod(event.target.value)} /><span><strong>Online payment</strong><small>Pay with SSLCommerz, using available cards or mobile banking.</small></span><b>{money(total)}</b></label>
         </section>
       </div>
       <aside className="checkout-summary"><h2>Order summary</h2><div className="checkout-summary-items">{items.map(({ product, quantity }) => <div className="checkout-summary-item" key={product._id}><span>{product.title} <small>× {quantity}</small></span><strong>{money((product.discountPrice ?? product.price) * quantity)}</strong></div>)}</div><div className="checkout-total"><span>Total</span><strong>{money(total)}</strong></div><p>Shipping costs, if applicable, will be confirmed by the seller.</p><button className="dark-button" type="submit" disabled={submitting}>{submitting ? 'Placing order…' : 'Place order'}</button><Link to="/cart" className="text-link">Return to cart</Link></aside>
