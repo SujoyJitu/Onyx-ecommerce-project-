@@ -59,7 +59,9 @@ Order routes require a verified JWT. Create an order as a customer with `POST /a
 
 Customers can cancel with `POST /api/orders/:id/cancel`. Cancellation is available while an order is pending or processing and payment is not marked paid; it restores the reserved product stock. Payment starts as `pending`. No payment provider is connected yet, so a trusted payment integration must mark successful payments as paid before paid-order review eligibility is enabled. Clients cannot create or change payment status.
 
-Vendor shop onboarding uses `GET /api/shops/my` to check for an existing shop and `POST /api/shops` to create one. New shops begin with `pending` status. The logo upload field is `logo` and uses the same image type/size limits as product uploads.
+Vendor dashboard analytics use vendor-owned order lines and products. `GET /api/payouts/my` returns earnings from delivered items, payout requests, and the available amount. `POST /api/payouts` accepts `{ "amount": 25, "note": "..." }` and creates a pending manual payout request; pending requests reserve available earnings. `DELETE /api/payouts/:id` lets a vendor withdraw their own pending request. Payment is handled outside the application.
+
+Vendor shop onboarding uses `GET /api/shops/my` to check for an existing shop and `POST /api/shops` to create one. New shops begin with `pending` status. Vendors can update shop name, description, address, and logo with `PUT /api/shops/my`; the logo upload field is `logo` and uses the same image type/size limits as product uploads.
 
 Registration requires `name`, `email`, `phone`, and an eight-character minimum password. Passwords are hashed using bcrypt before they are saved. New accounts must verify their email before password sign-in. Verification tokens expire in 24 hours; reset links expire in 15 minutes. Recovery and sign-in routes have per-IP rate limits. Auth middleware exports `authenticate`, `isVendor` (vendor or admin), and `isAdmin` for protecting application routes.
 

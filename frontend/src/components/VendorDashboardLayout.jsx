@@ -12,6 +12,7 @@ export default function VendorDashboardLayout() {
           <NavLink to="/seller/dashboard/products/new">Add product</NavLink>
           <NavLink to="/seller/dashboard/products">My products</NavLink>
           <NavLink to="/seller/dashboard/orders">Orders</NavLink>
+          <NavLink to="/seller/dashboard/earnings">Earnings and payouts</NavLink>
         </nav>
       </aside>
       <section className="vendor-content"><Outlet /></section>

@@ -22,6 +22,7 @@ import OrderSuccess from './pages/OrderSuccess.jsx';
 import MyOrders from './pages/MyOrders.jsx';
 import OrderTracking from './pages/OrderTracking.jsx';
 import VendorOrders from './pages/VendorOrders.jsx';
+import VendorEarnings from './pages/VendorEarnings.jsx';
 import CustomerOnlyRoute from './components/CustomerOnlyRoute.jsx';
 import VendorDashboardLayout from './components/VendorDashboardLayout.jsx';
 import VendorOnlyRoute from './components/VendorOnlyRoute.jsx';
@@ -142,6 +143,7 @@ function App() {
             <Route path="products" element={<MyProducts />} />
             <Route path="products/:productId/edit" element={<ProductForm />} />
             <Route path="orders" element={<VendorOrders />} />
+            <Route path="earnings" element={<VendorEarnings />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
