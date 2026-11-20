@@ -46,7 +46,7 @@ export default function Navbar() {
               {user ? (
                 <div className="user-wrap">
                   <button className="user-button" aria-expanded={userOpen} onClick={() => setUserOpen(!userOpen)}>{user.name.split(' ')[0]} <span>⌄</span></button>
-                  {userOpen && <div className="user-menu">{user.role === 'vendor' && <Link to="/seller/dashboard" onClick={() => setUserOpen(false)}>Seller studio</Link>}{user.role === 'customer' && <Link to="/wishlist" onClick={() => setUserOpen(false)}>My wishlist</Link>}<Link to="/account" onClick={() => setUserOpen(false)}>My account</Link><button onClick={signOut}>Sign out</button></div>}
+                  {userOpen && <div className="user-menu">{user.role === 'vendor' && <Link to="/seller/dashboard" onClick={() => setUserOpen(false)}>Seller studio</Link>}{user.role === 'customer' && <><Link to="/wishlist" onClick={() => setUserOpen(false)}>My wishlist</Link><Link to="/orders" onClick={() => setUserOpen(false)}>My orders</Link></>}<Link to="/account" onClick={() => setUserOpen(false)}>My account</Link><button onClick={signOut}>Sign out</button></div>}
                 </div>
               ) : <div className="auth-nav-actions"><Link className="auth-button" to="/signin" onClick={() => setMenuOpen(false)}>Sign in</Link><Link className="auth-signup-link" to="/signup" onClick={() => setMenuOpen(false)}>Sign up</Link></div>}
             </div>

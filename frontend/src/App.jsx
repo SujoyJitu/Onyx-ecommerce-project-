@@ -17,6 +17,12 @@ import Shop from './pages/Shop.jsx';
 import ProductDetails from './pages/ProductDetails.jsx';
 import Cart from './pages/Cart.jsx';
 import Wishlist from './pages/Wishlist.jsx';
+import Checkout from './pages/Checkout.jsx';
+import OrderSuccess from './pages/OrderSuccess.jsx';
+import MyOrders from './pages/MyOrders.jsx';
+import OrderTracking from './pages/OrderTracking.jsx';
+import VendorOrders from './pages/VendorOrders.jsx';
+import CustomerOnlyRoute from './components/CustomerOnlyRoute.jsx';
 import VendorDashboardLayout from './components/VendorDashboardLayout.jsx';
 import VendorOnlyRoute from './components/VendorOnlyRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -117,6 +123,10 @@ function App() {
         <Route path="/products/:productId" element={<ProductDetails />} />
         <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
         <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><CustomerOnlyRoute><Checkout /></CustomerOnlyRoute></ProtectedRoute>} />
+        <Route path="/orders/success/:orderId" element={<ProtectedRoute><CustomerOnlyRoute><OrderSuccess /></CustomerOnlyRoute></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><CustomerOnlyRoute><MyOrders /></CustomerOnlyRoute></ProtectedRoute>} />
+        <Route path="/orders/:orderId" element={<ProtectedRoute><CustomerOnlyRoute><OrderTracking /></CustomerOnlyRoute></ProtectedRoute>} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -131,6 +141,7 @@ function App() {
             <Route path="products/new" element={<ProductForm />} />
             <Route path="products" element={<MyProducts />} />
             <Route path="products/:productId/edit" element={<ProductForm />} />
+            <Route path="orders" element={<VendorOrders />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />

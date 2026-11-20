@@ -29,7 +29,7 @@ router.post('/:productId/reviews', authenticate, authorizeRoles('customer'), asy
   }
   try {
     if (!await Product.exists({ _id: req.params.productId })) return res.status(404).json({ message: 'Product not found.' });
-    const purchase = await Order.exists({ user: req.user._id, status: { $in: ['paid', 'shipped', 'delivered'] }, 'items.product': req.params.productId });
+    const purchase = await Order.exists({ customer: req.user._id, paymentStatus: 'paid', orderStatus: { $ne: 'cancelled' }, 'items.product': req.params.productId });
     if (!purchase) return res.status(403).json({ message: 'A completed purchase of this product is required to leave a review.' });
     const review = await Review.create({ product: req.params.productId, user: req.user._id, rating, comment: comment.trim() });
     await review.populate('user', 'name');

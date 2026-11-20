@@ -44,9 +44,15 @@ The public catalog only returns active products. Product listing supports `q` (t
 
 Cart and wishlist routes require a verified customer JWT. Cart routes are `GET /api/cart`, `POST /api/cart/items` with `{ "productId": "...", "quantity": 1 }`, `PATCH /api/cart/items/:productId` with `{ "quantity": 2 }`, and `DELETE /api/cart/items/:productId`. Adding an existing item increments its quantity; quantity changes cannot exceed current stock. Wishlist routes are `GET /api/wishlist`, `POST /api/wishlist/:productId`, and `DELETE /api/wishlist/:productId`.
 
-Reviews are public to read at `GET /api/products/:productId/reviews` with optional `page` and `limit`. A customer can submit `POST /api/products/:productId/reviews` with `{ "rating": 5, "comment": "..." }`. Each customer may review a product once, and creation requires a matching order item in an order whose status is `paid`, `shipped`, or `delivered`.
+Reviews are public to read at `GET /api/products/:productId/reviews` with optional `page` and `limit`. A customer can submit `POST /api/products/:productId/reviews` with `{ "rating": 5, "comment": "..." }`. Each customer may review a product once, and creation requires a matching order item with `paymentStatus: "paid"` that has not been cancelled.
 
-`Order` is the purchase-verification record used by reviews. This backend does not yet include checkout or order creation routes; the future checkout flow must create an order with the authenticated `user`, purchased `items` (product IDs and quantities), and advance its status from `pending` to `paid` after payment succeeds. Clients must not be allowed to submit or alter purchase records directly.
+## Orders
+
+Order routes require a verified JWT. Create an order as a customer with `POST /api/orders` and `{ "items": [{ "productId": "...", "qty": 2 }], "address": { "recipientName": "...", "phone": "...", "street": "...", "city": "...", "region": "...", "postalCode": "...", "country": "...", "notes": "..." }, "paymentMethod": "cash_on_delivery" }`. `items` may be omitted or empty to order the signed-in customer's cart. Cash on delivery is currently the only accepted payment method. Prices, vendors, and totals are read from the current product records; client-supplied prices and customer IDs are ignored. Stock is reserved when the order is created and cart items used for the order are removed.
+
+`GET /api/orders/my` returns the signed-in customer's order history. Vendors can use `GET /api/orders/vendor` to see orders containing their products and `PUT /api/orders/:id/status` with `{ "status": "processing" | "shipped" | "delivered" }` to advance their own items one step at a time. For multi-vendor orders, each vendor updates their own lines and the overall order status reflects their fulfillment progress.
+
+Customers can cancel with `POST /api/orders/:id/cancel`. Cancellation is available while an order is pending or processing and payment is not marked paid; it restores the reserved product stock. Payment starts as `pending`. No payment provider is connected yet, so a trusted payment integration must mark successful payments as paid before paid-order review eligibility is enabled. Clients cannot create or change payment status.
 
 Vendor shop onboarding uses `GET /api/shops/my` to check for an existing shop and `POST /api/shops` to create one. New shops begin with `pending` status. The logo upload field is `logo` and uses the same image type/size limits as product uploads.
 
