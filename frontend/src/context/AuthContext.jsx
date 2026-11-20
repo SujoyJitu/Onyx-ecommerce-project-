@@ -84,12 +84,19 @@ export function AuthProvider({ children }) {
     return result.user;
   }, [establishSession]);
 
+  const updateCurrentUser = useCallback((updatedUser) => setUser(updatedUser), []);
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    const result = await authRequest('/change-password', { method: 'POST', body: { currentPassword, newPassword }, token });
+    establishSession(result);
+    return result;
+  }, [token, establishSession]);
+
   const logout = useCallback(() => {
     window.localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout }), [user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout]);
+  const value = useMemo(() => ({ user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout, updateCurrentUser, changePassword }), [user, token, isLoading, login, register, resendVerification, verifyEmail, forgotPassword, resetPassword, googleLogin, logout, updateCurrentUser, changePassword]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

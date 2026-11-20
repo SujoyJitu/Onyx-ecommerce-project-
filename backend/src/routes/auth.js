@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
@@ -6,6 +7,8 @@ const { rateLimit } = require('express-rate-limit');
 const User = require('../models/User');
 const { authenticate } = require('../middleware/auth');
 const { sendAuthEmail } = require('../services/email');
+const { uploadProfilePhoto } = require('../middleware/profileUpload');
+const { uploadImageBuffer, deleteImages } = require('../services/cloudinary');
 
 const router = express.Router();
 const recoveryLimiter = () => rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, message: { message: 'Too many requests. Please wait 15 minutes and try again.' } });
@@ -25,6 +28,8 @@ const publicUser = (user) => ({
   name: user.name,
   email: user.email,
   phone: user.phone,
+  photoUrl: user.photo?.url || '',
+  savedAddresses: user.savedAddresses || [],
   role: user.role,
   createdAt: user.createdAt,
 });
@@ -209,6 +214,125 @@ router.post('/google', loginLimiter, async (req, res, next) => {
     if (error.name === 'Error' || error.message?.toLowerCase().includes('token')) {
       return res.status(401).json({ message: 'Google credential is invalid or expired.' });
     }
+    return next(error);
+  }
+});
+
+router.put('/profile', authenticate, uploadProfilePhoto, async (req, res, next) => {
+  const body = req.body || {};
+  if (body.name !== undefined && (typeof body.name !== 'string' || body.name.trim().length < 2 || body.name.trim().length > 120)) {
+    return res.status(400).json({ message: 'Name must contain 2 to 120 characters.' });
+  }
+  if (body.phone !== undefined && (typeof body.phone !== 'string' || body.phone.trim().length > 40)) {
+    return res.status(400).json({ message: 'Phone number must be 40 characters or fewer.' });
+  }
+  if (body.name === undefined && body.phone === undefined && !req.file && body.removePhoto !== 'true') {
+    return res.status(400).json({ message: 'Provide profile details or a profile photo.' });
+  }
+  let uploaded;
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'Account not found.' });
+    const oldPhoto = user.photo?.publicId ? [{ publicId: user.photo.publicId }] : [];
+    if (body.name !== undefined) user.name = body.name.trim();
+    if (body.phone !== undefined) user.phone = body.phone.trim();
+    if (req.file) {
+      uploaded = await uploadImageBuffer(req.file.buffer, { folder: 'onyx/profiles' });
+      user.photo = uploaded;
+    } else if (body.removePhoto === 'true') {
+      user.photo = { url: '', publicId: '' };
+    }
+    await user.save();
+    if (uploaded || body.removePhoto === 'true') await deleteImages(oldPhoto);
+    return res.json({ message: 'Profile updated successfully.', user: publicUser(user) });
+  } catch (error) {
+    if (uploaded) await deleteImages([uploaded]);
+    if (error.name === 'ValidationError') return res.status(400).json({ message: error.message });
+    return next(error);
+  }
+});
+
+function savedAddressInput(body) {
+  const fields = ['label', 'recipientName', 'phone', 'street', 'city', 'region', 'postalCode', 'country', 'notes'];
+  const value = {};
+  for (const field of fields) {
+    if (body[field] !== undefined) {
+      if (typeof body[field] !== 'string') throw Object.assign(new Error(`${field} must be text.`), { statusCode: 400 });
+      value[field] = body[field].trim();
+    }
+  }
+  if (body.isDefault !== undefined) {
+    if (typeof body.isDefault !== 'boolean') throw Object.assign(new Error('isDefault must be true or false.'), { statusCode: 400 });
+    value.isDefault = body.isDefault;
+  }
+  for (const field of ['recipientName', 'phone', 'street', 'city', 'postalCode', 'country']) {
+    if (typeof value[field] !== 'string' || !value[field]) throw Object.assign(new Error(`${field} is required.`), { statusCode: 400 });
+  }
+  return value;
+}
+
+router.post('/addresses', authenticate, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user.savedAddresses.length >= 10) return res.status(400).json({ message: 'You can save up to 10 addresses.' });
+    const input = savedAddressInput(req.body || {});
+    if (!user.savedAddresses.length) input.isDefault = true;
+    if (input.isDefault) user.savedAddresses.forEach((address) => { address.isDefault = false; });
+    user.savedAddresses.push(input);
+    await user.save();
+    return res.status(201).json({ user: publicUser(user) });
+  } catch (error) {
+    if (error.name === 'ValidationError') return res.status(400).json({ message: error.message });
+    return next(error);
+  }
+});
+
+router.put('/addresses/:addressId', authenticate, async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.addressId)) return res.status(400).json({ message: 'Invalid address id.' });
+  try {
+    const user = await User.findById(req.user._id);
+    const address = user.savedAddresses.id(req.params.addressId);
+    if (!address) return res.status(404).json({ message: 'Saved address not found.' });
+    const input = savedAddressInput(req.body || {});
+    if (input.isDefault) user.savedAddresses.forEach((entry) => { entry.isDefault = false; });
+    Object.assign(address, input);
+    await user.save();
+    return res.json({ user: publicUser(user) });
+  } catch (error) {
+    if (error.name === 'ValidationError') return res.status(400).json({ message: error.message });
+    return next(error);
+  }
+});
+
+router.delete('/addresses/:addressId', authenticate, async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.addressId)) return res.status(400).json({ message: 'Invalid address id.' });
+  try {
+    const user = await User.findById(req.user._id);
+    const address = user.savedAddresses.id(req.params.addressId);
+    if (!address) return res.status(404).json({ message: 'Saved address not found.' });
+    const wasDefault = address.isDefault;
+    user.savedAddresses.pull(req.params.addressId);
+    if (wasDefault && user.savedAddresses.length) user.savedAddresses[0].isDefault = true;
+    await user.save();
+    return res.json({ user: publicUser(user) });
+  } catch (error) { return next(error); }
+});
+
+router.post('/change-password', authenticate, async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (typeof currentPassword !== 'string' || !currentPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+    return res.status(400).json({ message: 'Enter your current password and a new password of at least 8 characters.' });
+  }
+  try {
+    const user = await User.findById(req.user._id).select('+password +googleId');
+    if (!user.password) return res.status(400).json({ message: 'This account does not have a password. Use your sign-in provider to access the account.' });
+    if (!await user.comparePassword(currentPassword)) return res.status(400).json({ message: 'Current password is incorrect.' });
+    user.password = newPassword;
+    user.sessionVersion = (user.sessionVersion || 0) + 1;
+    await user.save();
+    return res.json({ message: 'Password changed successfully.', token: issueToken(user), user: publicUser(user) });
+  } catch (error) {
+    if (error.name === 'ValidationError') return res.status(400).json({ message: error.message });
     return next(error);
   }
 });

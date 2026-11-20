@@ -24,6 +24,11 @@ All routes use JSON request and response bodies.
 | POST | `/api/auth/reset-password` | Sets a new password with an unexpired reset token and invalidates existing sessions. |
 | POST | `/api/auth/google` | Verifies a Google ID token and creates or signs in the associated account. |
 | GET | `/api/auth/me` | Returns the current user's public profile; requires `Authorization: Bearer <token>`. |
+| PUT | `/api/auth/profile` | Updates name and phone and optionally uploads/removes a JPEG, PNG, or WebP profile photo. |
+| POST | `/api/auth/addresses` | Adds a saved delivery address (maximum 10 per account). |
+| PUT | `/api/auth/addresses/:addressId` | Updates one of the signed-in user's saved addresses. |
+| DELETE | `/api/auth/addresses/:addressId` | Removes a saved address and selects a new default when needed. |
+| POST | `/api/auth/change-password` | Verifies the current password, changes it, invalidates existing sessions, and returns a fresh token. |
 
 ## Catalog models and vendor product routes
 
