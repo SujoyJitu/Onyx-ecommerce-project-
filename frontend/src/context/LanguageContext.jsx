@@ -1,0 +1,17 @@
+import { createContext, useContext, useMemo, useState } from 'react';
+
+const bn = {
+  Home: '\u09b9\u09cb\u09ae', Shop: '\u09a6\u09cb\u0995\u09be\u09a8', Categories: '\u09ac\u09bf\u09ad\u09be\u0997', 'Become a Seller': '\u09ac\u09bf\u0995\u09cd\u09b0\u09c7\u09a4\u09be \u09b9\u09a8', Cart: '\u0995\u09be\u09b0\u09cd\u099f',
+  'Search products...': '\u09aa\u09a3\u09cd\u09af \u0996\u09c1\u0981\u099c\u09c1\u09a8...', 'Search products': '\u09aa\u09a3\u09cd\u09af \u0996\u09c1\u0981\u099c\u09c1\u09a8', 'Sign in': '\u09b8\u09be\u0987\u09a8 \u0987\u09a8', 'Sign up': '\u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09a8',
+  'My wishlist': '\u09aa\u099b\u09a8\u09cd\u09a6\u09c7\u09b0 \u09a4\u09be\u09b2\u09bf\u0995\u09be', 'My orders': '\u0986\u09ae\u09be\u09b0 \u0985\u09b0\u09cd\u09a1\u09be\u09b0', 'My account': '\u0986\u09ae\u09be\u09b0 \u0985\u09cd\u09af\u09be\u0995\u09be\u0989\u09a8\u09cd\u099f', Messages: '\u09ac\u09be\u09b0\u09cd\u09a4\u09be', 'Sign out': '\u09b8\u09be\u0987\u09a8 \u0986\u0989\u099f',
+  'Shop thoughtfully.': '\u09ad\u09c7\u09ac\u09c7\u099a\u09bf\u09a8\u09cd\u09a4\u09c7 \u0995\u09c7\u09a8\u09be\u0995\u09be\u099f\u09be \u0995\u09b0\u09c1\u09a8', 'Filter by': '\u09ab\u09bf\u09b2\u09cd\u099f\u09be\u09b0', Category: '\u09ac\u09bf\u09ad\u09be\u0997', 'All categories': '\u09b8\u09ac \u09ac\u09bf\u09ad\u09be\u0997', 'Price range': '\u09a6\u09be\u09ae\u09c7\u09b0 \u09b8\u09c0\u09ae\u09be', Brand: '\u09ac\u09cd\u09b0\u09cd\u09af\u09be\u09a8\u09cd\u09a1', Rating: '\u09b0\u09c7\u099f\u09bf\u0982', 'Sort by': '\u09b8\u09be\u099c\u09be\u09a8', Newest: '\u09a8\u09a4\u09c1\u09a8', Popular: '\u099c\u09a8\u09aa\u09cd\u09b0\u09bf\u09af\u09bc', 'Price: low to high': '\u09a6\u09be\u09ae: \u0995\u09ae \u09a5\u09c7\u0995\u09c7 \u09ac\u09c7\u09b6\u09bf', 'Price: high to low': '\u09a6\u09be\u09ae: \u09ac\u09c7\u09b6\u09bf \u09a5\u09c7\u0995\u09c7 \u0995\u09ae',
+  Checkout: '\u099a\u09c7\u0995\u0986\u0989\u099f', 'Shipping address': '\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09a0\u09bf\u0995\u09be\u09a8\u09be', 'Payment method': '\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09aa\u09a6\u09cd\u09a7\u09a4\u09bf', 'Cash on delivery': '\u0995\u09cd\u09af\u09be\u09b6 \u0985\u09a8 \u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf', 'Online payment': '\u0985\u09a8\u09b2\u09be\u0987\u09a8 \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f', 'Order summary': '\u0985\u09b0\u09cd\u09a1\u09be\u09b0\u09c7\u09b0 \u09b8\u09be\u09b0\u09be\u0982\u09b6', 'Discount code': '\u09a1\u09bf\u09b8\u0995\u09be\u0989\u09a8\u09cd\u099f \u0995\u09cb\u09a1', Apply: '\u09aa\u09cd\u09b0\u09af\u09bc\u09cb\u0997 \u0995\u09b0\u09c1\u09a8', Total: '\u09ae\u09cb\u099f', Subtotal: '\u0989\u09aa\u09ae\u09cb\u099f', Discount: '\u099b\u09be\u09a1\u09bc', 'Place order': '\u0985\u09b0\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09c1\u09a8',
+};
+const LanguageContext = createContext(null);
+export function LanguageProvider({ children }) {
+  const [language, setLanguage] = useState(() => window.localStorage.getItem('onyx_language') || 'en');
+  const changeLanguage = (next) => { setLanguage(next); window.localStorage.setItem('onyx_language', next); };
+  const value = useMemo(() => ({ language, setLanguage: changeLanguage, t: (key) => language === 'bn' ? (bn[key] || key) : key }), [language]);
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}
+export const useLanguage = () => useContext(LanguageContext) || { language: 'en', setLanguage: () => {}, t: (key) => key };

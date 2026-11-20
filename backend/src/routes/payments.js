@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Coupon = require('../models/Coupon');
 const { authenticate, authorizeRoles } = require('../middleware/auth');
 const { startPayment, verifyPayment } = require('../services/sslcommerz');
 
@@ -28,7 +29,10 @@ async function releaseUnpaidOrder(order) {
     { $set: { paymentStatus: 'failed', orderStatus: 'cancelled', cancelledAt: new Date(), 'items.$[].fulfillmentStatus': 'cancelled' }, $inc: { __v: 1 } },
     { new: true },
   );
-  if (cancelled) await Promise.all(cancelled.items.map((item) => Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty } })));
+  if (cancelled) {
+    await Promise.all(cancelled.items.map((item) => Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty } })));
+    if (cancelled.coupon) await Coupon.updateOne({ _id: cancelled.coupon, usageCount: { $gt: 0 } }, { $inc: { usageCount: -1 } });
+  }
   return cancelled;
 }
 

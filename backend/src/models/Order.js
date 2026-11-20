@@ -32,9 +32,16 @@ const orderSchema = new mongoose.Schema({
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending', index: true },
   orderStatus: { type: String, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending', index: true },
   total: { type: Number, required: true, min: 0 },
+  subtotal: { type: Number, min: 0, default: 0 },
+  couponCode: { type: String, default: '' },
+  coupon: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon', default: null },
+  couponDiscount: { type: Number, min: 0, default: 0 },
   gatewayTransactionId: { type: String, default: null, index: true },
   gatewayBankTransactionId: { type: String, default: null },
   paidAt: { type: Date, default: null },
+  deliveryProvider: { type: String, enum: ['pathao', 'steadfast', 'other', ''], default: '' },
+  trackingNumber: { type: String, trim: true, maxlength: 120, default: '' },
+  trackingUrl: { type: String, trim: true, maxlength: 500, default: '' },
   cancelledAt: { type: Date, default: null },
 }, { timestamps: true, optimisticConcurrency: true });
 

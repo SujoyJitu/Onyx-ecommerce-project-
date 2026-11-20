@@ -15,6 +15,18 @@ const editableFields = ['title', 'description', 'price', 'discountPrice', 'stock
 const productStatuses = new Set(['draft', 'active', 'archived']);
 
 // Public catalog endpoints are declared before /:id vendor mutations.
+router.get('/suggestions', async (req, res, next) => {
+  const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
+  if (q.length < 2) return res.json({ suggestions: [] });
+  try {
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const shops = await Shop.find({ status: 'approved' }).select('owner').lean();
+    const vendors = await User.find({ _id: { $in: shops.map((shop) => shop.owner) }, isBlocked: { $ne: true } }).distinct('_id');
+    const products = await Product.find({ status: 'active', moderationStatus: 'visible', vendor: { $in: vendors }, $or: [{ title: { $regex: `^${escaped}`, $options: 'i' } }, { brand: { $regex: `^${escaped}`, $options: 'i' } }] }).select('title brand').limit(7).lean();
+    return res.json({ suggestions: products });
+  } catch (error) { return next(error); }
+});
+
 router.get('/', async (req, res, next) => {
   try {
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);

@@ -52,6 +52,14 @@ export default function ProductDetails() {
     finally { setSaving(false); }
   };
 
+  const contactSeller = async () => {
+    if (!user) return navigate('/signin', { state: { from: location } });
+    if (user.role !== 'customer') return setError('Customer accounts can message sellers.');
+    setError('');
+    try { const { conversation } = await apiRequest('/api/messages/threads', { method: 'POST', body: { productId } }); navigate(`/messages/${conversation._id}`); }
+    catch (requestError) { setError(requestError.message); }
+  };
+
   if (error && !product) return <main className="shop-page"><p className="shop-message" role="alert">{error}</p><Link className="text-link" to="/shop">Back to the shop</Link></main>;
   if (!product) return <main className="shop-page"><p className="shop-message">Loading product…</p></main>;
   const images = product.images?.length ? product.images : [];
@@ -62,6 +70,7 @@ export default function ProductDetails() {
       <section className="detail-copy"><span className="eyebrow">{product.brand || product.category?.name || 'ONYX EDIT'}</span><h1>{product.title}</h1><p className="detail-price">{money(product.discountPrice ?? product.price)}{product.discountPrice != null && <del>{money(product.price)}</del>}</p><p className="detail-rating">{reviews.length ? `★ ${reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length}/5 · ${reviews.length} reviews` : 'No reviews yet'}</p><p className="detail-description">{product.description}</p><p className={`detail-stock${product.stock ? '' : ' is-out'}`}>{product.stock ? `${product.stock} available` : 'Currently unavailable'}</p>
         {product.stock > 0 && <div className="detail-buy-row"><label htmlFor="product-quantity">Quantity</label><input id="product-quantity" type="number" min="1" max={product.stock} value={quantity} onChange={(event) => setQuantity(Math.min(product.stock, Math.max(1, Number(event.target.value) || 1)))} /><button className="dark-button" onClick={addToCart} disabled={busy}>{busy ? 'Adding…' : 'Add to cart'}</button></div>}
         <button className="save-to-wishlist" onClick={saveToWishlist} disabled={saving}>{saving ? 'Saving…' : '♡ Save to wishlist'}</button>
+        <button className="save-to-wishlist" onClick={contactSeller}>Message seller</button>
         {message && <p className="shop-success" role="status">{message} <Link to="/cart">View cart</Link></p>}{error && <p className="shop-message" role="alert">{error}</p>}
         <div className="seller-info"><span className="eyebrow">SOLD BY</span><strong>{product.vendor?.name || 'ONYX independent seller'}</strong><span>Thoughtfully selected, made to be kept.</span></div>
       </section>

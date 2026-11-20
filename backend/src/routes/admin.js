@@ -188,6 +188,18 @@ router.put('/orders/:id', async (req, res, next) => {
   } catch (error) { return next(error); }
 });
 
+router.put('/orders/:id/shipment', async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid order id.' });
+  const { provider, trackingNumber, trackingUrl } = req.body || {};
+  if (!['pathao', 'steadfast', 'other'].includes(provider) || typeof trackingNumber !== 'string' || trackingNumber.trim().length > 120 || typeof trackingUrl !== 'string' || trackingUrl.length > 500 || (trackingUrl && !/^https:\/\//i.test(trackingUrl))) return res.status(400).json({ message: 'Provide a courier, tracking number, and a valid HTTPS tracking link.' });
+  try {
+    const order = await Order.findByIdAndUpdate(req.params.id, { $set: { deliveryProvider: provider, trackingNumber: trackingNumber.trim(), trackingUrl: trackingUrl.trim() } }, { new: true, runValidators: true }).populate('customer', 'name email');
+    if (!order) return res.status(404).json({ message: 'Order not found.' });
+    if (order.customer?.email) await sendOrderEmail({ to: order.customer.email, subject: `Shipment information: ${order._id}`, text: `Hello ${order.customer.name},\n\nYour order has shipped with ${provider}. Tracking number: ${trackingNumber.trim()}.${trackingUrl ? ` Track it here: ${trackingUrl}` : ''}` }).catch((error) => console.error('Shipment email failed:', error.message));
+    return res.json({ order });
+  } catch (error) { return next(error); }
+});
+
 router.get('/commission', async (req, res, next) => {
   try { return res.json({ setting: await CommissionSetting.findById('global') || { _id: 'global', rate: 0 } }); }
   catch (error) { return next(error); }

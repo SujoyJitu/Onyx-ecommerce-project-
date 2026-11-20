@@ -35,6 +35,7 @@ import AdminProducts from './pages/AdminProducts.jsx';
 import AdminCategories from './pages/AdminCategories.jsx';
 import AdminOrders from './pages/AdminOrders.jsx';
 import AdminReturns from './pages/AdminReturns.jsx';
+import Messages from './pages/Messages.jsx';
 import AdminCommission from './pages/AdminCommission.jsx';
 import AdminCoupons from './pages/AdminCoupons.jsx';
 import AdminBanners from './pages/AdminBanners.jsx';
@@ -163,6 +164,8 @@ function App() {
         <Route path="/products/:productId" element={<ProductDetails />} />
         <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
         <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+        <Route path="/messages/:threadId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><CustomerOnlyRoute><Checkout /></CustomerOnlyRoute></ProtectedRoute>} />
         <Route path="/orders/success/:orderId" element={<ProtectedRoute><CustomerOnlyRoute><OrderSuccess /></CustomerOnlyRoute></ProtectedRoute>} />
         <Route path="/payment/result" element={<ProtectedRoute><CustomerOnlyRoute><PaymentResult /></CustomerOnlyRoute></ProtectedRoute>} />
@@ -184,6 +187,7 @@ function App() {
             <Route path="products/:productId/edit" element={<ProductForm />} />
             <Route path="orders" element={<VendorOrders />} />
             <Route path="earnings" element={<VendorEarnings />} />
+            <Route path="messages" element={<Messages />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />

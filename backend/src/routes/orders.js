@@ -6,6 +6,8 @@ const Product = require('../models/Product');
 const CommissionSetting = require('../models/CommissionSetting');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
+const Coupon = require('../models/Coupon');
+const { getCouponDiscount } = require('../services/coupons');
 const ReturnRequest = require('../models/ReturnRequest');
 const { authenticate, authorizeRoles } = require('../middleware/auth');
 
@@ -33,6 +35,7 @@ function aggregateStatus(items) {
 
 router.post('/', ...customerOnly, async (req, res, next) => {
   const { address, paymentMethod } = req.body || {};
+  const couponCode = typeof req.body?.couponCode === 'string' ? req.body.couponCode.trim().toUpperCase() : '';
   if (!paymentMethods.has(paymentMethod)) return res.status(400).json({ message: 'Choose cash on delivery or SSLCommerz.' });
   if (!address || typeof address !== 'object' || Array.isArray(address)) return res.status(400).json({ message: 'A delivery address is required.' });
   if (req.body?.items !== undefined && !Array.isArray(req.body.items)) return res.status(400).json({ message: 'Items must be an array.' });
@@ -61,6 +64,7 @@ router.post('/', ...customerOnly, async (req, res, next) => {
 
   const reservations = [];
   let createdOrder = null;
+  let reservedCouponId = null;
   try {
     const lines = [];
     const commission = await CommissionSetting.findById('global');
@@ -95,8 +99,27 @@ router.post('/', ...customerOnly, async (req, res, next) => {
       });
     }
 
-    const total = Math.round(lines.reduce((sum, line) => sum + line.price * line.qty, 0) * 100) / 100;
-    const order = await Order.create({ customer: req.user._id, items: lines, address, paymentMethod, total });
+    const subtotal = Math.round(lines.reduce((sum, line) => sum + line.price * line.qty, 0) * 100) / 100;
+    const { coupon, discount } = await getCouponDiscount(couponCode, subtotal);
+    if (coupon) {
+      const now = new Date();
+      const eligibility = { _id: coupon._id, active: true, $and: [
+        { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
+        { $or: [{ endsAt: null }, { endsAt: { $gte: now } }] },
+        { $or: [{ usageLimit: null }, { $expr: { $lt: ['$usageCount', '$usageLimit'] } }] },
+      ] };
+      const incremented = await Coupon.findOneAndUpdate(eligibility, { $inc: { usageCount: 1 } }, { new: true });
+      if (!incremented) throw Object.assign(new Error('That coupon has just expired or reached its usage limit.'), { statusCode: 409 });
+      reservedCouponId = coupon._id;
+      for (const line of lines) {
+        const share = discount * (line.price * line.qty / subtotal);
+        const net = Math.max(0, line.price * line.qty - share);
+        line.commissionAmount = Math.round(net * line.commissionRate) / 100;
+        line.vendorEarning = Math.round(net * (100 - line.commissionRate)) / 100;
+      }
+    }
+    const total = Math.round((subtotal - discount) * 100) / 100;
+    const order = await Order.create({ customer: req.user._id, items: lines, address, paymentMethod, subtotal, coupon: coupon?._id || null, couponCode: coupon?.code || '', couponDiscount: discount, total });
     createdOrder = order;
     if (cart) {
       await Cart.updateOne({ _id: cart._id }, { $pull: { items: { product: { $in: lines.map((line) => line.product) } } } }).catch(() => {});
@@ -115,6 +138,7 @@ router.post('/', ...customerOnly, async (req, res, next) => {
       return res.status(201).json({ message: 'Order placed successfully.', order: createdOrder });
     }
     await Promise.allSettled(reservations.map(({ productId, qty }) => Product.updateOne({ _id: productId }, { $inc: { stock: qty } })));
+    if (reservedCouponId) await Coupon.updateOne({ _id: reservedCouponId, usageCount: { $gt: 0 } }, { $inc: { usageCount: -1 } });
     if (error.name === 'ValidationError') return res.status(400).json({ message: error.message });
     return next(error);
   }
@@ -218,6 +242,7 @@ router.post('/:id/cancel', ...customerOnly, async (req, res, next) => {
       return res.status(409).json({ message: 'This order can no longer be cancelled.' });
     }
     await Promise.all(order.items.map((item) => Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty } })));
+    if (order.coupon) await Coupon.updateOne({ _id: order.coupon, usageCount: { $gt: 0 } }, { $inc: { usageCount: -1 } });
     await publicOrder(order);
     if (order.customer?.email) {
       const { sendOrderEmail } = require('../services/email');

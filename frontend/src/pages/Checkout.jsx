@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../services/http.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useAuth } from '../context/useAuth.js';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 const money = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
 
 export default function Checkout() {
   const { items, isLoading, refreshCart } = useCart();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const savedDefault = user?.savedAddresses?.find((entry) => entry.isDefault) || user?.savedAddresses?.[0];
   const [savedAddressId, setSavedAddressId] = useState(savedDefault?._id || '');
@@ -18,9 +20,19 @@ export default function Checkout() {
     country: savedDefault.country, notes: savedDefault.notes || '',
   } : { recipientName: '', phone: '', street: '', city: '', region: '', postalCode: '', country: '', notes: '' });
   const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
+  const [couponCode, setCouponCode] = useState('');
+  const [coupon, setCoupon] = useState(null);
+  const [couponMessage, setCouponMessage] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const total = items.reduce((sum, item) => sum + (item.product.discountPrice ?? item.product.price) * item.quantity, 0);
+  const payableTotal = Math.max(0, total - (coupon?.discount || 0));
+
+  const applyCoupon = async () => {
+    setCouponMessage('');
+    try { const result = await apiRequest('/api/coupons/validate', { method: 'POST', body: { code: couponCode, subtotal: total } }); setCoupon(result); setCouponMessage(`${result.code} applied. You save ${money(result.discount)}.`); }
+    catch (requestError) { setCoupon(null); setCouponMessage(requestError.message); }
+  };
 
   const changeAddress = (event) => setAddress((current) => ({ ...current, [event.target.name]: event.target.value }));
   const chooseSavedAddress = (event) => {
@@ -35,7 +47,7 @@ export default function Checkout() {
   const placeOrder = async (event) => {
     event.preventDefault(); setSubmitting(true); setError('');
     try {
-      const { order } = await apiRequest('/api/orders', { method: 'POST', body: { address, paymentMethod } });
+      const { order } = await apiRequest('/api/orders', { method: 'POST', body: { address, paymentMethod, couponCode: coupon?.code || '' } });
       await refreshCart().catch(() => {});
       if (paymentMethod === 'sslcommerz') {
         const { paymentUrl } = await apiRequest(`/api/payments/sslcommerz/${order._id}`, { method: 'POST' });
@@ -51,11 +63,11 @@ export default function Checkout() {
   if (!items.length) return <main className="checkout-page"><div className="shop-empty"><h1>Your cart is empty</h1><p>Add a few pieces before checking out.</p><Link className="dark-button" to="/shop">Explore the shop</Link></div></main>;
 
   return <main className="checkout-page">
-    <div className="cart-heading"><span className="eyebrow">ALMOST YOURS</span><h1>Checkout</h1></div>
+    <div className="cart-heading"><span className="eyebrow">ALMOST YOURS</span><h1>{t('Checkout')}</h1></div>
     <form className="checkout-layout" onSubmit={placeOrder}>
       <div className="checkout-fields">
         {error && <p className="shop-message" role="alert">{error}</p>}
-        <section className="checkout-section"><span className="eyebrow">01 · DELIVERY</span><h2>Shipping address</h2>
+        <section className="checkout-section"><span className="eyebrow">01 · DELIVERY</span><h2>{t('Shipping address')}</h2>
           {!!user.savedAddresses?.length && <label className="saved-address-select">Use a saved address<select value={savedAddressId} onChange={chooseSavedAddress}><option value="">Enter a new address</option>{user.savedAddresses.map((entry) => <option key={entry._id} value={entry._id}>{entry.label || 'Address'} · {entry.city}, {entry.country}</option>)}</select></label>}
           <div className="checkout-form-grid">
             <label className="checkout-wide">Full name<input name="recipientName" autoComplete="name" required maxLength="120" value={address.recipientName} onChange={changeAddress} /></label>
@@ -68,12 +80,12 @@ export default function Checkout() {
             <label className="checkout-wide">Delivery notes <span className="checkout-optional">(optional)</span><textarea name="notes" rows="3" maxLength="500" value={address.notes} onChange={changeAddress} /></label>
           </div>
         </section>
-        <section className="checkout-section"><span className="eyebrow">02 · PAYMENT</span><h2>Payment method</h2>
-          <label className="payment-choice"><input type="radio" name="paymentMethod" value="cash_on_delivery" checked={paymentMethod === 'cash_on_delivery'} onChange={(event) => setPaymentMethod(event.target.value)} /><span><strong>Cash on delivery</strong><small>Pay when your order arrives.</small></span><b>{money(total)}</b></label>
-          <label className="payment-choice"><input type="radio" name="paymentMethod" value="sslcommerz" checked={paymentMethod === 'sslcommerz'} onChange={(event) => setPaymentMethod(event.target.value)} /><span><strong>Online payment</strong><small>Pay with SSLCommerz, using available cards or mobile banking.</small></span><b>{money(total)}</b></label>
+        <section className="checkout-section"><span className="eyebrow">02 · PAYMENT</span><h2>{t('Payment method')}</h2>
+          <label className="payment-choice"><input type="radio" name="paymentMethod" value="cash_on_delivery" checked={paymentMethod === 'cash_on_delivery'} onChange={(event) => setPaymentMethod(event.target.value)} /><span><strong>{t('Cash on delivery')}</strong><small>Pay when your order arrives.</small></span><b>{money(payableTotal)}</b></label>
+          <label className="payment-choice"><input type="radio" name="paymentMethod" value="sslcommerz" checked={paymentMethod === 'sslcommerz'} onChange={(event) => setPaymentMethod(event.target.value)} /><span><strong>{t('Online payment')}</strong><small>Pay with SSLCommerz, using available cards or mobile banking.</small></span><b>{money(payableTotal)}</b></label>
         </section>
       </div>
-      <aside className="checkout-summary"><h2>Order summary</h2><div className="checkout-summary-items">{items.map(({ product, quantity }) => <div className="checkout-summary-item" key={product._id}><span>{product.title} <small>× {quantity}</small></span><strong>{money((product.discountPrice ?? product.price) * quantity)}</strong></div>)}</div><div className="checkout-total"><span>Total</span><strong>{money(total)}</strong></div><p>Shipping costs, if applicable, will be confirmed by the seller.</p><button className="dark-button" type="submit" disabled={submitting}>{submitting ? 'Placing order…' : 'Place order'}</button><Link to="/cart" className="text-link">Return to cart</Link></aside>
+      <aside className="checkout-summary"><h2>Order summary</h2><div className="checkout-summary-items">{items.map(({ product, quantity }) => <div className="checkout-summary-item" key={product._id}><span>{product.title} <small>× {quantity}</small></span><strong>{money((product.discountPrice ?? product.price) * quantity)}</strong></div>)}</div><div><label htmlFor="coupon-code">Discount code</label><div className="coupon-entry"><input id="coupon-code" value={couponCode} onChange={(event) => setCouponCode(event.target.value)} placeholder="Enter code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponMessage && <small role="status">{couponMessage}</small>}</div><div className="checkout-total"><span>Subtotal</span><strong>{money(total)}</strong></div>{coupon?.discount > 0 && <div className="checkout-total"><span>Discount</span><strong>−{money(coupon.discount)}</strong></div>}<div className="checkout-total"><span>Total</span><strong>{money(payableTotal)}</strong></div><p>Shipping costs, if applicable, will be confirmed by the seller.</p><button className="dark-button" type="submit" disabled={submitting}>{submitting ? 'Continuing…' : paymentMethod === 'sslcommerz' ? 'Continue to secure payment' : 'Place order'}</button><Link to="/cart" className="text-link">Return to cart</Link></aside>
     </form>
   </main>;
 }
