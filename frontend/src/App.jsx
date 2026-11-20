@@ -13,6 +13,10 @@ import SellerShopForm from './pages/SellerShopForm.jsx';
 import SellerOverview from './pages/SellerOverview.jsx';
 import ProductForm from './pages/ProductForm.jsx';
 import MyProducts from './pages/MyProducts.jsx';
+import Shop from './pages/Shop.jsx';
+import ProductDetails from './pages/ProductDetails.jsx';
+import Cart from './pages/Cart.jsx';
+import Wishlist from './pages/Wishlist.jsx';
 import VendorDashboardLayout from './components/VendorDashboardLayout.jsx';
 import VendorOnlyRoute from './components/VendorOnlyRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -65,7 +69,7 @@ function HomePage() {
                 <h1>{slide.heading}</h1>
                 <p>{slide.description}</p>
                 <div className="hero-buttons">
-                  <a className="hero-button hero-button-primary" href="#shop">Shop Now <span aria-hidden="true">→</span></a>
+                  <Link className="hero-button hero-button-primary" to="/shop">Shop Now <span aria-hidden="true">→</span></Link>
                   <Link className="hero-button hero-button-outline" to="/seller/register">Start Selling</Link>
                 </div>
               </div>
@@ -109,6 +113,10 @@ function App() {
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/products/:productId" element={<ProductDetails />} />
+        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

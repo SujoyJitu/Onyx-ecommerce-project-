@@ -26,4 +26,6 @@ productSchema.pre('validate', function validateDiscountPrice() {
   }
 });
 
+productSchema.index({ title: 'text', description: 'text', brand: 'text' });
+
 module.exports = mongoose.model('Product', productSchema);

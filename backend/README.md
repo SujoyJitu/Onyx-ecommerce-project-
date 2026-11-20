@@ -38,6 +38,16 @@ All routes use JSON request and response bodies.
 
 Product writes require a verified vendor JWT in `Authorization: Bearer <token>`. The routes accept only the `vendor` role; administrators cannot create or edit products as vendors.
 
+## Customer catalog, cart, wishlist, and reviews
+
+The public catalog only returns active products. Product listing supports `q` (text search across title, description, and brand), `category` (category ID or slug), `minPrice`, `maxPrice`, `sort` (`newest`, `price_asc`, `price_desc`, `title_asc`, `title_desc`), `page`, and `limit` (maximum 100). Responses include a `pagination` object. `GET /api/products/:id` returns one active product. `GET /api/categories` returns available categories.
+
+Cart and wishlist routes require a verified customer JWT. Cart routes are `GET /api/cart`, `POST /api/cart/items` with `{ "productId": "...", "quantity": 1 }`, `PATCH /api/cart/items/:productId` with `{ "quantity": 2 }`, and `DELETE /api/cart/items/:productId`. Adding an existing item increments its quantity; quantity changes cannot exceed current stock. Wishlist routes are `GET /api/wishlist`, `POST /api/wishlist/:productId`, and `DELETE /api/wishlist/:productId`.
+
+Reviews are public to read at `GET /api/products/:productId/reviews` with optional `page` and `limit`. A customer can submit `POST /api/products/:productId/reviews` with `{ "rating": 5, "comment": "..." }`. Each customer may review a product once, and creation requires a matching order item in an order whose status is `paid`, `shipped`, or `delivered`.
+
+`Order` is the purchase-verification record used by reviews. This backend does not yet include checkout or order creation routes; the future checkout flow must create an order with the authenticated `user`, purchased `items` (product IDs and quantities), and advance its status from `pending` to `paid` after payment succeeds. Clients must not be allowed to submit or alter purchase records directly.
+
 Vendor shop onboarding uses `GET /api/shops/my` to check for an existing shop and `POST /api/shops` to create one. New shops begin with `pending` status. The logo upload field is `logo` and uses the same image type/size limits as product uploads.
 
 Registration requires `name`, `email`, `phone`, and an eight-character minimum password. Passwords are hashed using bcrypt before they are saved. New accounts must verify their email before password sign-in. Verification tokens expire in 24 hours; reset links expire in 15 minutes. Recovery and sign-in routes have per-IP rate limits. Auth middleware exports `authenticate`, `isVendor` (vendor or admin), and `isAdmin` for protecting application routes.

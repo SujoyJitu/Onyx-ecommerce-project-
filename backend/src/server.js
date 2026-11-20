@@ -7,6 +7,9 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const shopRoutes = require('./routes/shops');
 const categoryRoutes = require('./routes/categories');
+const cartRoutes = require('./routes/cart');
+const wishlistRoutes = require('./routes/wishlist');
+const reviewRoutes = require('./routes/reviews');
 
 // Create the Express application.
 const app = express();
@@ -18,6 +21,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/shops', shopRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/products', reviewRoutes);
 
 // Let clients check whether the backend is running.
 app.get('/api/health', (req, res) => {
