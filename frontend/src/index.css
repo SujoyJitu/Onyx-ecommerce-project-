@@ -1,22 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/cormorant-garamond/500.css';
+@import '@fontsource/cormorant-garamond/600.css';
 
 :root {
   font-family: 'Inter', sans-serif;
-  color: #17191d;
-  background: #f6f6f4;
+  color: #F5F2EC;
+  background: #0B0B0C;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-optical-sizing: auto;
   font-weight: 400;
-  --onyx: #17191d;
-  --gold: #c9ad69;
-  --paper: #fff;
-  --muted: #73757a;
+  --onyx: #0B0B0C;
+  --gold: #C8A25E;
+  --paper: #141416;
+  --muted: #9A968E;
+  --surface: #141416;
+  --surface-raised: #1C1C1F;
+  --border: rgba(255,255,255,.08);
+  --text: #F5F2EC;
+  --gold-hover: #D9B873;
 }
 
 * { box-sizing: border-box; }
-body { min-width: 320px; margin: 0; }
-button, input { font: inherit; }
+body { min-width: 320px; margin: 0; color: var(--text); background: var(--onyx); }
+button, input, textarea, select { font: inherit; color: inherit; }
 a { color: inherit; }
+h1,h2,h3,h4 { font-family: 'Cormorant Garamond', serif; color: var(--text); }
+section, article { color: var(--text); }
+input,textarea,select { background-color: var(--surface); border-color: var(--border); }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* Shared dark surfaces keep older page layouts readable. */
+body { color: var(--text); }
+main, .content-section, .page, .page-container { background-color: transparent; }
+[class*="card"], [class*="panel"], [class*="form"], [class*="table"], [class*="layout"] { color: var(--text); }
+input, textarea, select { color: var(--text) !important; }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+table, th, td { color: var(--text); border-color: var(--border); }

@@ -16,6 +16,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const navTargets = { Home: '/', Shop: '/shop', Categories: '/shop', 'Become a Seller': '/seller/register' };
   const submitSearch = (event) => { event.preventDefault(); navigate(`/shop${searchText.trim() ? `?q=${encodeURIComponent(searchText.trim())}` : ''}`); };
   useEffect(() => {
@@ -24,6 +26,12 @@ export default function Navbar() {
     const timer = setTimeout(() => apiRequest(`/api/products/suggestions?q=${encodeURIComponent(searchText.trim())}`).then(({ suggestions: list }) => { if (active) setSuggestions(list || []); }).catch(() => { if (active) setSuggestions([]); }), 180);
     return () => { active = false; clearTimeout(timer); };
   }, [searchText]);
+  useEffect(() => {
+    let previous = window.scrollY;
+    const onScroll = () => { const current = window.scrollY; setScrolled(current > 40); setHidden(current > previous && current > 120); previous = current; };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   const signOut = () => {
     logout();
     setUserOpen(false);
@@ -31,7 +39,7 @@ export default function Navbar() {
     navigate('/');
   };
   return (<>
-      <header className="site-header">
+      <header className={`site-header${scrolled ? ' is-scrolled' : ''}${hidden && !menuOpen ? ' is-hidden' : ''}`}>
         <nav className="navbar" aria-label="Main navigation">
           <a className="brand" href="/" aria-label="Onyx home">
             <img src="/Photos/logo.jpg" alt="ONYX — Elevated E-commerce" />
