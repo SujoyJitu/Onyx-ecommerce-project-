@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Routes, Route, Link } from 'react-router-dom';
 import MainLayout from './MainLayout.jsx';
 import NotFound from './NotFound.jsx';
@@ -44,12 +45,9 @@ import VendorDashboardLayout from './components/VendorDashboardLayout.jsx';
 import VendorOnlyRoute from './components/VendorOnlyRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import './App.css';
+import Magnetic from './components/Magnetic.jsx';
+const OnyxGem = lazy(() => import('./components/OnyxGem.jsx'));
 
-const slides = [
-  { image: '/Photos/banner%20image%201.jpg', kicker: 'THE ONYX EDIT', heading: 'Elegance in every detail.', description: 'Discover considered design, timeless pieces, and a more elevated way to shop.' },
-  { image: '/Photos/banner%20image%202.jpg', kicker: 'GIFT BEAUTIFULLY', heading: 'Timeless luxury, thoughtfully chosen.', description: 'Find a memorable gift for every occasion, wrapped in the art of giving.' },
-  { image: '/Photos/banner%20image%203.jpg', kicker: 'A NEW CLASSIC', heading: 'Make everyday feel exceptional.', description: 'Explore a curated collection made for lasting style and everyday moments.' },
-];
 const categories = [
   { name: 'Phones', icon: '✳', tone: 'sand' }, { name: 'Laptops', icon: '▱', tone: 'stone' },
   { name: 'Fashion', icon: '◇', tone: 'blush' }, { name: 'Home', icon: '⌂', tone: 'sage' },
@@ -68,30 +66,32 @@ const shops = [
 ];
 
 function HomePage() {
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [heroSlides, setHeroSlides] = useState(slides);
-
-  useEffect(() => {
-    apiRequest('/api/banners').then(({ banners }) => {
-      if (banners?.length) {
-        setHeroSlides(banners.map((banner) => ({ image: banner.imageUrl, kicker: 'ONYX MARKETPLACE', heading: banner.title, description: banner.subtitle, linkUrl: banner.linkUrl || '/shop' })));
-        setActiveSlide(0);
-      }
-    }).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % heroSlides.length), 6000);
-    return () => window.clearInterval(timer);
-  }, [heroSlides.length]);
-
-  const changeSlide = (direction) => setActiveSlide((current) => (current + direction + heroSlides.length) % heroSlides.length);
+  const reduceMotion = useReducedMotion();
+  const headlineWords = 'Elegance in every detail'.split(' ');
 
   return (
     <>
 
       <main>
-        <section className="hero" aria-label="Featured collections">
+        <section className="hero hero-luxury" aria-label="Welcome to ONYX">
+          <div className="hero-dust" aria-hidden="true" />
+          <span className="hero-wordmark" aria-hidden="true">ONYX</span>
+          <div className="hero-copy">
+            <span className="hero-kicker">TIMELESS LUXURY</span>
+            <motion.h1 initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: reduceMotion ? 0 : 0.12 } } }}>
+              {headlineWords.map((word, index) => <motion.span className="hero-word" key={`${word}-${index}`} variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: reduceMotion ? 0 : 0.65 } } }}>{word}{index < headlineWords.length - 1 ? ' ' : ''}</motion.span>)}
+            </motion.h1>
+            <p>Discover considered design, timeless pieces, and a more elevated way to shop.</p>
+            <div className="hero-buttons">
+              <Magnetic><Link className="hero-button hero-button-primary" to="/shop">Shop Now <span aria-hidden="true">→</span></Link></Magnetic>
+              <Link className="hero-button hero-button-outline" to="/seller/register">Start Selling</Link>
+            </div>
+          </div>
+          <div className="hero-gem"><Suspense fallback={<div className="gem-placeholder" aria-label="Loading onyx gem" />}><OnyxGem /></Suspense></div>
+          <a className="scroll-indicator" href="#categories"><span>SCROLL TO DISCOVER</span><i aria-hidden="true" /></a>
+        </section>
+        {/* Original homepage banner slider replaced by the brand hero above. */}
+        {false && <section className="hero" aria-label="Featured collections">
           {heroSlides.map((slide, index) => (
             <article className={`hero-slide${index === activeSlide ? ' is-active' : ''}`} key={slide.image} aria-hidden={index !== activeSlide}>
               <img className="hero-image" src={slide.image} alt="" />
@@ -112,7 +112,7 @@ function HomePage() {
           <div className="hero-dots" aria-label="Choose banner">
             {heroSlides.map((slide, index) => <button key={slide.image} aria-label={`Show banner ${index + 1}`} aria-current={index === activeSlide} onClick={() => setActiveSlide(index)} />)}
           </div>
-        </section>
+        </section>}
         <section className="content-section categories-section" id="categories">
           <div className="section-heading"><div><span className="eyebrow">EXPLORE ONYX</span><h2>Shop by category</h2></div><a className="text-link" href="#shop">View all categories <span>→</span></a></div>
           <div className="category-grid">{categories.map((category) => <a className="category-card" href={`#${category.name.toLowerCase()}`} key={category.name}><span className={`category-art ${category.tone}`} aria-hidden="true">{category.icon}</span><span>{category.name}</span><span className="category-arrow">↗</span></a>)}</div>
