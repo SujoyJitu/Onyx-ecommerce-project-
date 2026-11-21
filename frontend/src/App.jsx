@@ -46,6 +46,7 @@ import VendorOnlyRoute from './components/VendorOnlyRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import './App.css';
 import Magnetic from './components/Magnetic.jsx';
+import Reveal from './components/Reveal.jsx';
 const OnyxGem = lazy(() => import('./components/OnyxGem.jsx'));
 
 const categories = [
@@ -91,28 +92,7 @@ function HomePage() {
           <a className="scroll-indicator" href="#categories"><span>SCROLL TO DISCOVER</span><i aria-hidden="true" /></a>
         </section>
         {/* Original homepage banner slider replaced by the brand hero above. */}
-        {false && <section className="hero" aria-label="Featured collections">
-          {heroSlides.map((slide, index) => (
-            <article className={`hero-slide${index === activeSlide ? ' is-active' : ''}`} key={slide.image} aria-hidden={index !== activeSlide}>
-              <img className="hero-image" src={slide.image} alt="" />
-              <div className="hero-shade" />
-              <div className="hero-copy">
-                <span className="hero-kicker">{slide.kicker}</span>
-                <h1>{slide.heading}</h1>
-                <p>{slide.description}</p>
-                <div className="hero-buttons">
-                  <Link className="hero-button hero-button-primary" to={slide.linkUrl || '/shop'}>Shop Now <span aria-hidden="true">→</span></Link>
-                  <Link className="hero-button hero-button-outline" to="/seller/register">Start Selling</Link>
-                </div>
-              </div>
-            </article>
-          ))}
-          <button className="hero-arrow hero-arrow-prev" aria-label="Previous banner" onClick={() => changeSlide(-1)}>‹</button>
-          <button className="hero-arrow hero-arrow-next" aria-label="Next banner" onClick={() => changeSlide(1)}>›</button>
-          <div className="hero-dots" aria-label="Choose banner">
-            {heroSlides.map((slide, index) => <button key={slide.image} aria-label={`Show banner ${index + 1}`} aria-current={index === activeSlide} onClick={() => setActiveSlide(index)} />)}
-          </div>
-        </section>}
+        
         <section className="content-section categories-section" id="categories">
           <div className="section-heading"><div><span className="eyebrow">EXPLORE ONYX</span><h2>Shop by category</h2></div><a className="text-link" href="#shop">View all categories <span>→</span></a></div>
           <div className="category-grid">{categories.map((category) => <a className="category-card" href={`#${category.name.toLowerCase()}`} key={category.name}><span className={`category-art ${category.tone}`} aria-hidden="true">{category.icon}</span><span>{category.name}</span><span className="category-arrow">↗</span></a>)}</div>
